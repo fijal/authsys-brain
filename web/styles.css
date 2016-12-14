@@ -1,0 +1,21 @@
+
+.green {
+    background-color: #11DD11;
+}
+
+.red {
+    background-color: #DD1111;
+}
+
+.status-button {
+    padding: 6px;
+    border: 1px;
+}
+
+#form_get_scanner {
+    padding: 2px;
+}
+
+#form_get_parent {
+    margin: 10px;
+}

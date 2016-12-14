@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <link rel="stylesheet" type="text/css" href="styles.css" />
+   </head>
+   <body>
+      <h3>Command console</h3>
+      <div id="errorbar">
+      </div>
+      <div id="header">
+         <a href="#" onclick="show('current_status'); return false;">system status</a>
+         <a href="#" onclick="show('list_entries'); update_entries(); return false;">access log</a>
+         <a href="#" onclick="show('member_lookup'); list_members_async(); return false;">member management</a>
+         <a href="#" onclick="show('member_add'); list_indemnity_forms(); return false;">add member</a>
+      </div>
+      <div id="current_status">
+         <h1>Current system status:</h1>
+         <span class="status-button" id="reader_status_1"></span>
+      </div>
+      <div id="list_entries" style="display: none">
+         <h1>List of last entrances:</h1>
+         <ul id="last_entrance_list">
+         </ul>
+      </div>
+      <div id="member_lookup" style="display: none">
+         <h1>Member Lookup</h1>
+         <div id="placeholder"></div>
+      </div>
+      <div id="member_add" style="display: none">
+         <h1>Member addition</h1>
+         <div id="member_add_list"></div>
+      </div>
+      <!-- <script>AUTOBAHN_DEBUG = true;</script> -->
+      <script src="http://autobahn.s3.amazonaws.com/autobahnjs/latest/autobahn.min.jgz"></script>
+      <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
+      <script src="index.js"></script>
+   </body>
+</html>
