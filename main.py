@@ -23,6 +23,15 @@ class AppSession(ApplicationSession):
     def list_members(self):
         return q.get_member_list(con)
 
+    def get_member_data(self, no):
+        return q.get_member_data(con, no)
+
+    def add_one_month(self, type, no):
+        return q.add_one_month_subscription(con, no, type)
+
+    def remove_subscription(self, no):
+        return q.remove_subscription(con, no)
+
     def list_indemnity_forms(self):
         return q.list_indemnity_forms(con)
 
@@ -36,10 +45,11 @@ class AppSession(ApplicationSession):
     def register_token(self, token_id):
         con.execute(entries.insert().values(timestamp=int(time.time()), token_id=token_id))
         self.publish('com.members.entry')
+        return q.is_valid_token(con, token_id, int(time.time()))
 
     def list_entries(self):
         t0 = time.time() - 24 * 3600
-        return [(a, b, time.ctime(c)) for a, b, c in q.entries_after(con, t0)]
+        return q.entries_after(con, t0)
 
     def reader_visible(self, no):
         self.readers_last_seen[no] = time.time()
@@ -70,9 +80,12 @@ class AppSession(ApplicationSession):
         yield self.register(self.register_token, 'com.members.register_token')
         yield self.register(self.list_entries, 'com.members.list_entries')
         yield self.register(self.reader_visible, 'com.members.reader_visible')
+        yield self.register(self.get_member_data, 'com.members.get')
         yield self.register(self.list_indemnity_forms, 'com.forms.list')
         yield self.register(self.get_form, 'com.forms.get')
         yield self.register(self.get_last_unassigned, 'com.tokens.get_last_unassigned')
+        yield self.register(self.add_one_month, 'com.subscription.add_one_month')
+        yield self.register(self.remove_subscription, 'com.subscription.remove')
         #self.log.info("procedure add2() registered")
 
         # PUBLISH and CALL every second .. forever

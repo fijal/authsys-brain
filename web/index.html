@@ -4,21 +4,24 @@
       <link rel="stylesheet" type="text/css" href="styles.css" />
    </head>
    <body>
-      <h3>Command console</h3>
       <div id="errorbar">
       </div>
-      <div id="header">
-         <a href="#" onclick="show('current_status'); return false;">system status</a>
-         <a href="#" onclick="show('list_entries'); update_entries(); return false;">access log</a>
-         <a href="#" onclick="show('member_lookup'); list_members_async(); return false;">member management</a>
-         <a href="#" onclick="show('member_add'); list_indemnity_forms(); return false;">add member</a>
+      <div class="tabs" id="header">
+         <ul class="tabs-nav">
+            <li class="selected"><a href="#" onclick="show('current_status', this); return false;">SYSTEM STATUS</a></li>
+            <li class="selectable"><a href="#" onclick="show('list_entries', this); update_entries(); return false;">ACCESS LOG</a></li>
+            <li class="selectable"><a href="#" onclick="show('member_lookup', this); list_members_async(); return false;">MEMBER MANAGEMENT</a></li>
+            <li class="selectable"><a href="#" onclick="show('member_add', this); list_indemnity_forms(); return false;">ADD MEMBER</a></li>
+         </ul>
       </div>
       <div id="current_status">
          <h1>Current system status:</h1>
-         <span class="status-button" id="reader_status_1"></span>
+         <span id="reader-status-circle" class="red circle"></span>
+         <span class="status-button" id="reader-status-1"><img id="rfid-icon" src="rfid_signal-512.png"/>
+         <span id="reader-status-text">reader 1</span></span>
       </div>
       <div id="list_entries" style="display: none">
-         <h1>List of last entrances:</h1>
+         <h1>List of entries in the last 24h:</h1>
          <ul id="last_entrance_list">
          </ul>
       </div>

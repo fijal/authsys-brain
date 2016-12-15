@@ -38,13 +38,57 @@ function list_members_async()
    connection.session.call('com.members.list').then(function(res) {
       var r = "<ul>"
       for (var i in res) {
-         r += "<li>" + res[i][0] + "</li>";
+         r += "<li><a href='#' onclick='show_member_details(" + res[i][0] + ")'>" + res[i][1] + "</a></li>";
       }
       r += "</ul>"
       $("#placeholder").html(r);
    }, function(res) {
       $("#placeholder").text(res);
    });
+}
+
+function add_membership(type, no)
+{
+   connection.session.call('com.subscription.add_one_month', [type, no]).then(
+      function (res) { show_member_details(no) }, show_error);
+}
+
+function remove_membership(no)
+{
+   connection.session.call('com.subscription.remove', [no]).then(
+      function (res) { show_member_details(no) }, show_error);
+}
+
+function show_member_details(no)
+{
+   connection.session.call('com.members.get', [no]).then(function (res) {
+      var memb_type, subscirption, cancel_button = "";
+      if (res[3] == null) {
+         memb_type = "no membership";
+         subscription = "never paid";
+         cls = "red";
+      } else {
+         memb_type = res[3];
+         if (memb_type == "before4") {
+            memb_type = "enter before 4pm";
+         }
+         subscription = new Date(res[4] * 1000);
+         if (subscription > new Date()) {
+            cls = "green";
+            cancel_button = ("<button type='button' onclick='remove_membership(" +
+               res[0] + ")'>remove last month membership</button>");
+         } else {
+            cls = "red";
+         }
+      }
+      $("#placeholder").html("<span class='" + cls + "'>Name: " + res[1] + "</span><br/>" +
+         "Signed up: " + new Date(res[2] * 1000) + "<br/>" +
+         "Membership type: " + memb_type + "<br/>" +
+         "Membership paid till: " + subscription + "<br/>" +
+         "<button type='button' onclick=\"add_membership('regular', " + res[0] + ")\">" + "Add one month membership" +
+         "</button><button type='button' onclick=\"add_membership('before4', " +
+         res[0] + ")\">Add one month membership before 4pm</button>" + cancel_button);
+   }, show_error);
 }
 
 function show_form(no)
@@ -91,11 +135,55 @@ function add_member_async()
 
 function update_entries()
 {
+   function parse_time(t)
+   {
+      var now = new Date();
+      if (now.getDay() == t.getDay()) {
+         if (now - t < 3600 * 1000) {
+            return Math.ceil((now - t) / 60 / 1000) + " minutes ago";
+         }
+         return Math.ceil((now - t) / 3600 / 1000) + " hours ago";
+      }
+      return t;
+   }
+
+   function show_entry(elem)
+   {
+      var r = "", cls, reason;
+      var entry_time = new Date(elem[2] * 1000);
+      if (elem[1] == null) {
+         cls = "red";
+         reason = "unknown token";
+      } else {
+         if (elem[3] == null || elem[3] < elem[2]) {
+            cls = "red";
+            reason = "no valid subscription";
+         } else if (elem[4] == "before4" && entry_time.getHours() >= 16) {
+            cls = "red";
+            reason = "entry after 4pm for subscription before 4pm";
+         } else if (new Date(elem[3] * 1000) - entry_time < 3600 * 24 * 1000) {
+            cls = "yellow";
+            reason = "subscription expiring in less than 24h";
+         } else {
+            reason = "";
+            cls = "green";
+         }
+      }
+      var name;
+      if (elem[1] != null)
+         name = elem[1]
+      else
+         name = "token: " + elem[0]
+      r = "<li><span class='" + cls + " circle'></span><span><span class='list-name'>" + name
+      r += "</span><span class='list-reason'>" + reason + "</span>" + parse_time(entry_time);
+      r += "</span></li>"
+      return r;
+   }
+
    connection.session.call('com.members.list_entries').then(function(res){
       var r = "";
       for (var i in res) {
-         r += ("<li>Time: " + res[i][2] + " token_id: " + res[i][0] + " name: " +
-               res[i][1] + "</li>");
+         r += show_entry(res[i]);
       }
       $("#last_entrance_list").html(r);
    }, show_error);
@@ -113,8 +201,14 @@ function update_entries()
 
 var current_tab = $("#current_status");
 
-function show(which)
+function show(which, elem)
 {
+   var selected = $(".selected");
+   selected.removeClass("selected");
+   selected.addClass("selectable");
+   var li = $(elem).parent();
+   li.removeClass("selectable");
+   li.addClass("selected");
    if (current_tab) {
       $(current_tab).hide();
    }
@@ -143,16 +237,16 @@ function healthcheck_update()
    var cur_time = new Date().getTime() / 1000;
    var diff = cur_time - last_healthcheck[0];
    if (diff < 3) {
-      $("#reader_status_1").removeClass("red");
-      $("#reader_status_1").addClass("green");
-      $("#reader_status_1").text("Reader 1");
+      $("#reader-status-circle").removeClass("red");
+      $("#reader-status-circle").addClass("green");
+      $("#reader-status-text").html("reader 1");
    } else {
-      $("#reader_status_1").removeClass("green");
-      $("#reader_status_1").addClass("red");
+      $("#reader-status-circle").removeClass("green");
+      $("#reader-status-circle").addClass("red");
       if (last_healthcheck[0] == 0)
-         $("#reader_status_1").text("Reader 1 never seen");
+         $("#reader-status-text").html("reader 1 never seen");
       else
-         $("#reader_status_1").text("Reader 1: Last seen: " + Math.ceil(diff) + " seconds ago");
+         $("#reader-status-text").html("reader 1: Last seen: " + Math.ceil(diff) + " seconds ago");
    }
 }
 

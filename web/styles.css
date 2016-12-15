@@ -1,10 +1,100 @@
 
+body {
+    font-family: Helvetica;
+    background-color: #DDD;
+}
+
+.tabs {
+    position: relative;
+    background-color: #CCC;
+    overflow: hidden;
+    margin: 0 auto;
+    width: 100%;
+    font-weight: 300;
+    font-size: 1.25em;
+}
+
+.tabs ul {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    list-style-type: none;
+    list-style-position: outside;
+    text-align: center;
+    display: flex;
+}
+
+.tabs li {
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-left: 1px;
+    margin-right: 1px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    background-color: white;
+}
+
+.tabs a {
+    text-decoration: none;
+    color: #666;
+}
+
+/*.tabs li a {
+    margin: 0 2px;
+    background-color: #f7f7f7;
+    color: #74777b;
+    transition: background-color 0.2s, color 0.2s;
+}*/
+
+.tabs li.selectable a:hover,
+.tabs li.selectable a:focus {
+    color: #3C6;
+}
+
+.tabs li.selected {
+    background-color: #3C6;
+}
+
+ul {
+    list-style-type: none;
+}
+
+li {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.list-name {
+    min-width: 400px;
+    display: inline-block;
+}
+
+.list-reason {
+    min-width: 300px;
+    display: inline-block;
+}
+
+.circle {
+    border-radius: 50%;
+    padding: 3px 10px 3px 10px;
+    margin-right: 5px;
+}
+
+#rfid-icon {
+    height: 25px;
+    position: relative;
+    top: 7px;
+}
+
 .green {
-    background-color: #11DD11;
+    background-color: #22EE22;
 }
 
 .red {
-    background-color: #DD1111;
+    background-color: #FF2222;
+}
+
+.yellow {
+    background-color: #DDDD11;
 }
 
 .status-button {
