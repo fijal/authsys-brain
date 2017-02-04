@@ -162,7 +162,7 @@ function update_visitor_list(filter)
          if (elem[4] == null) {
             text = 'day pass';
          } else {
-            text = 'remove day pass';
+            text = 'cancel day pass';
          }
          r += ('<li><button onclick="daypass_change(this, ' + elem[0] + ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + elem[0] + ')">' + elem[1] + 
                ', ID number: ' + elem[2] + ', registered ' + ts + '</li></a>');
