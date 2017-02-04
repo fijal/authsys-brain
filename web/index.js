@@ -140,6 +140,16 @@ function filter_visitors()
    update_visitor_list($("#filter-visitor-text")[0].value);
 }
 
+function daypass_change(button, no)
+{
+   connection.session.call('com.daypass.change', [no]).then(function(res) {
+   }, show_error);
+   if ($(button).text() == "day pass")
+      $(button).text("cancel day pass");
+   else
+      $(button).text("day pass");
+}
+
 function update_visitor_list(filter)
 {
    var res = global_status.visitor_list;
@@ -148,7 +158,13 @@ function update_visitor_list(filter)
       var elem = res[i];
       if (elem[1].toLowerCase().search(filter.toLowerCase()) != -1) {
          var ts = new Date(elem[3] * 1000);
-         r += ('<li><button class="daypass" type="button">Day pass</button><a href="#" onclick="return show_form(' + elem[0] + ')">' + elem[1] + 
+         var text;
+         if (elem[4] == null) {
+            text = 'day pass';
+         } else {
+            text = 'remove day pass';
+         }
+         r += ('<li><button onclick="daypass_change(this, ' + elem[0] + ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + elem[0] + ')">' + elem[1] + 
                ', ID number: ' + elem[2] + ', registered ' + ts + '</li></a>');
       }
    }

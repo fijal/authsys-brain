@@ -59,7 +59,10 @@ class AppSession(ApplicationSession):
         self.publish('com.members.healthcheck', self.readers_last_seen)
 
     def get_last_unassigned(self, tstamp):
-        return q.unrecognized_entries_after(con, tstamp)[0];
+        return q.unrecognized_entries_after(con, tstamp)[0]
+
+    def daypass_change(self, no):
+        q.daypass_change(con, no)
 
     @inlineCallbacks
     def onJoin(self, details):
@@ -84,6 +87,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.list_entries, 'com.members.list_entries')
         yield self.register(self.reader_visible, 'com.members.reader_visible')
         yield self.register(self.change_date, 'com.members.change_date')
+        yield self.register(self.daypass_change, 'com.daypass.change')
         yield self.register(self.get_member_data, 'com.members.get')
         yield self.register(self.list_indemnity_forms, 'com.forms.list')
         yield self.register(self.get_form, 'com.forms.get')
