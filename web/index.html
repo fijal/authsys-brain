@@ -10,8 +10,8 @@
          <ul class="tabs-nav">
             <li class="selected"><a href="#" onclick="show('current_status', this); return false;">SYSTEM STATUS</a></li>
             <li class="selectable"><a href="#" onclick="show('list_entries', this); update_entries(); return false;">ACCESS LOG</a></li>
-            <li class="selectable"><a href="#" onclick="show('member_lookup', this); list_members_async(); return false;">MEMBER MANAGEMENT</a></li>
-            <li class="selectable"><a href="#" onclick="show('member_add', this); list_indemnity_forms(); return false;">ADD MEMBER</a></li>
+            <li class="selectable"><a href="#" onclick="show('member_lookup', this); list_members_async(); return false;">MEMBERS</a></li>
+            <li class="selectable"><a href="#" onclick="show('member_add', this); list_indemnity_forms(); return false;">ALL VISITORS</a></li>
          </ul>
       </div>
       <div id="current_status">
@@ -27,10 +27,12 @@
       </div>
       <div id="member_lookup" style="display: none">
          <h1>Member Lookup</h1>
+         <div id="filter-member">Filter: <input id="filter-text" onkeyup="return filter_members();" size=50 type="text"/></div>
          <div id="placeholder"></div>
       </div>
       <div id="member_add" style="display: none">
-         <h1>Member addition</h1>
+         <h1>All visitors</h1>
+         <div id="filter-visitor">Filter: <input id="filter-visitor-text" onkeyup="return filter_visitors();" size=50 type="text"/></div>
          <div id="member_add_list"></div>
       </div>
       <!-- <script>AUTOBAHN_DEBUG = true;</script> -->

@@ -29,6 +29,9 @@ class AppSession(ApplicationSession):
     def add_one_month(self, type, no):
         return q.add_one_month_subscription(con, no, type)
 
+    def change_date(self, no, year, month, day):
+        q.change_date(con, no, year, month, day)
+
     def remove_subscription(self, no):
         return q.remove_subscription(con, no)
 
@@ -80,6 +83,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.register_token, 'com.members.register_token')
         yield self.register(self.list_entries, 'com.members.list_entries')
         yield self.register(self.reader_visible, 'com.members.reader_visible')
+        yield self.register(self.change_date, 'com.members.change_date')
         yield self.register(self.get_member_data, 'com.members.get')
         yield self.register(self.list_indemnity_forms, 'com.forms.list')
         yield self.register(self.get_form, 'com.forms.get')

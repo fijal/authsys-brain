@@ -109,3 +109,41 @@ li {
 #form_get_parent {
     margin: 10px;
 }
+
+.member-item {
+    margin: 10px;
+}
+
+.member-form button {
+    padding: 10px;
+    margin-left: 10px;
+}
+
+#filter-member {
+    margin-left: 50px;
+}
+
+#filter-member input[type=text] {
+    font-size: 1.25em;
+}
+
+#filter-visitor {
+    margin-left: 50px;
+}
+
+#filter-visitor input[type=text] {
+    font-size: 1.25em;
+}
+
+.member-item-span input[type=text] {
+    font-size: 1.25em;
+}
+
+.daypass {
+    margin-right: 10px;
+    padding: 10px;
+}
+
+.member-item-span {
+    margin-left: 20px;
+}

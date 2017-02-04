@@ -32,16 +32,26 @@ function Status()
 
 var global_status = new Status();
 
+function update_member_list(filter)
+{
+   var res = global_status.member_list;
+   var r = "<ul>"
+   for (var i in res) {
+      if (res[i][1].toLowerCase().search(filter.toLowerCase()) != -1)
+         r += "<li><a href='#' onclick='show_member_details(" + res[i][0] + ")'>" + res[i][1] + "</a></li>";
+   }
+   r += "</ul>"
+   $("#placeholder").html(r);
+}
 
 function list_members_async()
 {
    connection.session.call('com.members.list').then(function(res) {
-      var r = "<ul>"
-      for (var i in res) {
-         r += "<li><a href='#' onclick='show_member_details(" + res[i][0] + ")'>" + res[i][1] + "</a></li>";
-      }
-      r += "</ul>"
-      $("#placeholder").html(r);
+      $("#filter-member").show();
+      $("#filter-text")[0].value = "";
+      global_status.member_list = res;
+      $("#filter-text").focus();
+      update_member_list("");
    }, function(res) {
       $("#placeholder").text(res);
    });
@@ -59,9 +69,18 @@ function remove_membership(no)
       function (res) { show_member_details(no) }, show_error);
 }
 
+function change_membership(no)
+{
+   connection.session.call('com.members.change_date', [no, $("#year-change")[0].value,
+      $("#month-change")[0].value, $("#day-change")[0].value]).then(function (res) {
+         show_member_details(no);
+      }, show_error);
+}
+
 function show_member_details(no)
 {
    connection.session.call('com.members.get', [no]).then(function (res) {
+      $("#filter-member").hide();
       var memb_type, subscirption, cancel_button = "";
       if (res[3] == null) {
          memb_type = "no membership";
@@ -81,19 +100,23 @@ function show_member_details(no)
             cls = "red";
          }
       }
-      $("#placeholder").html("<span class='" + cls + "'>Name: " + res[1] + "</span><br/>" +
-         "Signed up: " + new Date(res[2] * 1000) + "<br/>" +
-         "Membership type: " + memb_type + "<br/>" +
-         "Membership paid till: " + subscription + "<br/>" +
+      $("#placeholder").html("<div class='member-form'><div class='member-item'><span class='" + cls + "'>Name: " + res[1] + "</span></div>" +
+         "<div class='member-item'>Signed up: " + new Date(res[2] * 1000) + "</div>" +
+         "<div class='member-item'>Membership type: " + memb_type + "</div>" +
+         "<div class='member-item'>Membership paid till: " + subscription + " " +
+         "<span class='member-item-span'>Year: <input id='year-change' value='2017' size=4 type='text'/> Month: " +
+         "<input id='month-change' size=2 type='text'/> Day: <input id='day-change' size=2 type='text'/>" + 
+         "<button type='button' onclick='change_membership(" + res[0] + ")'>Change</button></span></div>" +
          "<button type='button' onclick=\"add_membership('regular', " + res[0] + ")\">" + "Add one month membership" +
          "</button><button type='button' onclick=\"add_membership('before4', " +
-         res[0] + ")\">Add one month membership before 4pm</button>" + cancel_button);
+         res[0] + ")\">Add one month membership before 4pm</button>" + cancel_button + '</div>');
    }, show_error);
 }
 
 function show_form(no)
 {
    connection.session.call('com.forms.get', [no]).then(function(res) {
+      $("#filter-visitor").hide();
       var r = ("Name: " + res[1] + "<br/>" + "ID no: " + res[2] +
          "<br/><div id='form_get_parent'><span id='form_get_scanner' class='red'>Please scan tag now</span></div>" +
          "<form onclick='return false;''>" +
@@ -106,18 +129,41 @@ function show_form(no)
    return false;
 }
 
+function filter_members()
+{
+   update_member_list($("#filter-text")[0].value);
+   return true;
+}
+
+function filter_visitors()
+{
+   update_visitor_list($("#filter-visitor-text")[0].value);
+}
+
+function update_visitor_list(filter)
+{
+   var res = global_status.visitor_list;
+   var r = "<ul>";
+   for (var i in res) {
+      var elem = res[i];
+      if (elem[1].toLowerCase().search(filter.toLowerCase()) != -1) {
+         var ts = new Date(elem[3] * 1000);
+         r += ('<li><button class="daypass" type="button">Day pass</button><a href="#" onclick="return show_form(' + elem[0] + ')">' + elem[1] + 
+               ', ID number: ' + elem[2] + ', registered ' + ts + '</li></a>');
+      }
+   }
+   r += "</ul>"
+   $("#member_add_list").html(r);
+}
+
 function list_indemnity_forms()
 {
    connection.session.call('com.forms.list').then(function(res) {
-      var r = "<ul>";
-      for (var i in res) {
-         var elem = res[i];
-         var ts = new Date(elem[3] * 1000);
-         r += ('<li><a href="#" onclick="return show_form(' + elem[0] + ')">' + elem[1] + 
-               ', ID number: ' + elem[2] + ', registered ' + ts + '</li></a>');
-      }
-      r += "</ul>"
-      $("#member_add_list").html(r);
+      $("#filter-visitor").show();
+      $("#filter-visitor-text")[0].value = "";
+      $("#filter-visitor-text").focus();
+      global_status.visitor_list = res;
+      update_visitor_list("");
    }, show_error);
 }
 
