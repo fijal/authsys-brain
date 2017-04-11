@@ -124,7 +124,7 @@ class AppSession(ApplicationSession):
         d = dict([x.split("=") for x in path.split("&")])
         token_id = urllib.unquote(d['id'])
         url = conf.get('payment', 'base') + urllib.unquote(d['resourcePath'])
-        params = "&".join(["%s=%s" for (k, v) in [
+        params = "&".join(["%s=%s" % (k, v) for (k, v) in [
          ('authentication.userId', conf.get('payment', 'userId')),
          ('authentication.password', conf.get('payment', 'password')),
          ('authentication.entityId', conf.get('payment', 'entityId')),
