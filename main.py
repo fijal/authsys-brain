@@ -167,6 +167,9 @@ class AppSession(ApplicationSession):
     def get_stats(self):
         return q.get_stats(con)
 
+    def get_form(self, no):
+        return q.get_form(con, no)
+
     def pause_from_to(self, no, from_timestamp, to_timestamp):
         xxx
 
@@ -207,6 +210,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.get_payment_history, 'com.payments.get_history')
         yield self.register(self.pause_from_to, 'com.subscription.pause')
         yield self.register(self.get_stats, 'com.stats.get')
+        yield self.register(self.get_form, 'com.forms.get')
         #self.log.info("procedure add2() registered")
 
         # PUBLISH and CALL every second .. forever
