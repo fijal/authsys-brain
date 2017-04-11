@@ -171,6 +171,7 @@ function show_statistics()
 function show_member_details(no)
 {
    connection.session.call('com.members.get', [no]).then(function (res) {
+      console.log(res);
       $("#filter-member").hide();
       var memb_info = "", subscription, cancel_button = "";
       var cls = "";
@@ -212,7 +213,7 @@ function show_member_details(no)
          var buttons = "<button onclick='initiate_ipad_transaction(" + res.member_id + ", \"before4\")' type='button'>" +
             "Initiate new before 4 credit card</button>" +
             "<button type='button' onclick='initiate_ipad_transaction(" + res.member_id + ", \"youth\")'>Initiate new youth credit card</button>" +
-            "<button onclick='initiate_ipad_transaction(" + res.member_rd + ", \"regular\")' type='button'>" +
+            "<button onclick='initiate_ipad_transaction(" + res.member_id + ", \"regular\")' type='button'>" +
             "Initiate new regular credit card</button>";
          var inf = get_credit_card_info(res.credit_card_token);
          var pause_buttons = get_pause_buttons(res.memebr_id);
