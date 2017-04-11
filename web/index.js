@@ -57,9 +57,17 @@ function list_members_async()
    });
 }
 
+function authorize_credit_card(no)
+{
+   connection.session.call('com.members.authorize_cc', [no]).then(function (res) {
+      $("#cc-authorization").html("pending");
+   }, show_error);
+}
+
 function add_membership(type, no)
 {
-   connection.session.call('com.subscription.add_one_month', [type, no]).then(
+   connection.session.call('com.subscription.add_till', [type, no, $("#year-change")[0].value,
+      $("#month-change")[0].value, $("#day-change")[0].value]).then(
       function (res) { show_member_details(no) }, show_error);
 }
 
@@ -69,47 +77,165 @@ function remove_membership(no)
       function (res) { show_member_details(no) }, show_error);
 }
 
-function change_membership(no)
+function change_membership(no, tp)
 {
-   connection.session.call('com.members.change_date', [no, $("#year-change")[0].value,
-      $("#month-change")[0].value, $("#day-change")[0].value]).then(function (res) {
-         show_member_details(no);
-      }, show_error);
+   connection.session.call('com.members.change_membership_type', [no, tp]).then(
+      function (res) { show_member_details(no); }, show_error);
+}
+
+function addMonths (date, count) {
+  if (date && count) {
+    var m, d = (date = new Date(+date)).getDate()
+
+    date.setMonth(date.getMonth() + count, 1)
+    m = date.getMonth()
+    date.setDate(d)
+    if (date.getMonth() !== m) date.setDate(0)
+  }
+  return date
+}
+
+function refresh_transaction_history(no)
+{
+   connection.session.call('com.payments.get_history', [no]).then(function (res) {
+      if (!$("#list-of-operations")[0])
+         return;
+      r = "<table class='res-table'><tr><td>Time:</td><td>Type:</td><td>Outcome:</td><td>Value:</td></tr>";
+      var k = res.payment_history;
+      for (var i in k)
+      {
+         var elem = k[i];
+         r += "<tr><td>" + (new Date(elem[2] * 1000)) + "</td>" +
+         "<td>" + elem[3] + "</td>" +
+         "<td>" + elem[5] + "</td>" +
+         "<td>R" + elem[6] + "</td>";
+      }
+      r += "</table>";
+      $("#list-of-operations").html(r);
+      $("#cc-info").html(get_credit_card_info(res.credit_card_token));
+   });
+}
+
+function initiate_ipad_transaction(no, tp)
+{
+   connection.session.call("com.payments.notify_transaction" , [no, tp]).then(function (res) {
+      refresh_transaction_history(no);
+   }, show_error);
+}
+
+function get_extra_buttons(no, txt, del_button_flag, d)
+{
+   var d2 = addMonths(d, 1);
+   var del_button = "<button onclick='remove_membership(" + no + ")' type='button'>delete last membership</button>";
+   if (!del_button_flag)
+      del_button = "";
+   return "<p class='subscription-info-containter-2'><span>" + del_button +
+   "<button onclick=\"add_membership('before4', " + no + ")\" type='button'>" + txt + " before 4pm until:</button>" +
+   "<button onclick=\"add_membership('regular', " + no + ")\" type='button'>" + txt + " regular until:</button>" +
+   "<span class='member-item-span'>Year: <input id='year-change' value='" + d2.getFullYear() + "' size=4 type='text'/> Month: " +
+   "<input id='month-change' value='" + (d2.getMonth() + 1) + "' size=2 type='text'/> Day: <input id='day-change' size=2 value='" + d2.getDate() + "' type='text'/>" + 
+   "</span></p>";
+}
+
+function get_pause_buttons(no)
+{
+   return "";
+   d = new Date();
+   return "<p id='pause-result'></p><p id='pause-container'>Pause from <input id='pause-start-year' value=" + d.getFullYear()  + 
+     " size=4>-<input size=2 id='pause-start-month'>-<input size=2 id='pause-start-day'> to <input size=4 id='pause-end-year' value=" +
+     d.getFullYear() + ">-<input size=2 id='pause-end-month'>-<input size=2 id='pause-end-day'>" +
+     "<button oclick='do_pause(" + no + ")' type='button'>Pause</button></p>";
+}
+
+function get_credit_card_info(r)
+{
+   if (r == null) {
+      return "no credit card on file";
+   } else {
+      return "<span class='green'>credit card known</span>";
+   }
+
+}
+
+function show_statistics()
+{
+   connection.session.call('com.stats.get').then(function (res) {
+      $("#statistics").html("<p>Valid pay-as-you go members: " + res.total_ondemand + "</p>" +
+         "<p>Valid recurring members: " + res.total_recurring + "</p>" +
+         "<p>Total perpetual members: " + res.total_perpetual + "</p>" +
+         "<p>Number of people who crossed the door: " + res.total_visitors + "</p>" +
+         "<p></p>")
+   });
 }
 
 function show_member_details(no)
 {
    connection.session.call('com.members.get', [no]).then(function (res) {
       $("#filter-member").hide();
-      var memb_type, subscirption, cancel_button = "";
-      if (res[3] == null) {
-         memb_type = "no membership";
-         subscription = "never paid";
-         cls = "red";
-      } else {
-         memb_type = res[3];
-         if (memb_type == "before4") {
-            memb_type = "enter before 4pm";
-         }
-         subscription = new Date(res[4] * 1000);
-         if (subscription > new Date()) {
-            cls = "green";
-            cancel_button = ("<button type='button' onclick='remove_membership(" +
-               res[0] + ")'>remove last month membership</button>");
+      var memb_info = "", subscription, cancel_button = "";
+      var cls = "";
+      var but1 = "", but2 = "", but3 = "", but4 = "";
+      if (res.member_type == null) {
+         but1 = "selected";
+         memb_info = "<div class='member-item-info'>No current membership</div>";
+      } else if (res.member_type == "ondemand") {
+         but3 = "selected";
+         if (res.subscription_type == null) {
+            subscription = "no subscription";
          } else {
-            cls = "red";
+            var valid_till = new Date(res.subscription_ends * 1000);
+            var exp = "";
+            var extra_buttons = "";
+            if (valid_till > new Date()) {
+               cls = "green";
+               exp = ", valid till " + valid_till.toDateString();
+               extra_buttons = get_extra_buttons(res.member_id, "change", true, valid_till);
+            } else {
+               cls = "red";
+               exp = ", expired";
+               extra_buttons = get_extra_buttons(res.member_id, "add", false, new Date());
+            }
+            var memb_type = res.member_type;
+            if (memb_type == "before4") {
+               subscription = "<p class='subscription-info-containter'><span class='subscription-info " + cls + 
+                   "''>Membership before 4" + exp + "</span></p>";
+            } else {
+               subscription = "<p class='subscription-info-containter'><span class='subscription-info " + cls +
+                   "''>Regular membership" + exp + "</span></p>";
+            }
          }
+         memb_info = ("<div class='member-item-info'>" + 
+            subscription + extra_buttons +
+            "</div>");
+      } else if (res.member_type == "recurring") {
+         but2 = "selected";
+         var buttons = "<button onclick='initiate_ipad_transaction(" + res.member_id + ", \"before4\")' type='button'>" +
+            "Initiate new before 4 credit card</button>" +
+            "<button type='button' onclick='initiate_ipad_transaction(" + res.member_id + ", \"youth\")'>Initiate new youth credit card</button>" +
+            "<button onclick='initiate_ipad_transaction(" + res.member_rd + ", \"regular\")' type='button'>" +
+            "Initiate new regular credit card</button>";
+         var inf = get_credit_card_info(res.credit_card_token);
+         var pause_buttons = get_pause_buttons(res.memebr_id);
+         memb_info = "<div class='member-item-info'>" + pause_buttons + "<p><span class='subscription-info'><span id='cc-info'>" + inf +
+           "</span>" + buttons + "<p id='list-of-operations'></p>" + "</span></p></div>";
+         refresh_transaction_history(res.member_id);
+      } else if (res.member_type == "perpetual") {
+         but4 = "selected";
+         memb_info = "<div class='member-item-info'>Perpetual membership (routesetters etc.)</div>";
+      } else {
+         memb_type = "error";
       }
-      $("#placeholder").html("<div class='member-form'><div class='member-item'><span class='" + cls + "'>Name: " + res[1] + "</span></div>" +
-         "<div class='member-item'>Signed up: " + new Date(res[2] * 1000) + "</div>" +
-         "<div class='member-item'>Membership type: " + memb_type + "</div>" +
-         "<div class='member-item'>Membership paid till: " + subscription + " " +
-         "<span class='member-item-span'>Year: <input id='year-change' value='2017' size=4 type='text'/> Month: " +
-         "<input id='month-change' size=2 type='text'/> Day: <input id='day-change' size=2 type='text'/>" + 
-         "<button type='button' onclick='change_membership(" + res[0] + ")'>Change</button></span></div>" +
-         "<button type='button' onclick=\"add_membership('regular', " + res[0] + ")\">" + "Add one month membership" +
-         "</button><button type='button' onclick=\"add_membership('before4', " +
-         res[0] + ")\">Add one month membership before 4pm</button>" + cancel_button + '</div>');
+      var membership_buttons = ("<div class='member-item'>Membership type:" + 
+         "<button class='" + but1 + "' onclick='change_membership(" + res.member_id + ",\"none\")' type='button'>No membership</button>" +
+         "<button class='" + but2 + "' onclick='change_membership(" + res.member_id + ",\"recurring\")' type='button'>Recurring membership</button>" +
+         "<button class='" + but3 + "'onclick='change_membership(" + res.member_id + ",\"ondemand\")' type='button'>On demand membership</button>" +
+         "<button class='" + but4 + "'onclick='change_membership(" + res.member_id + ",\"perpetual\")' type='button'>Perpetual membership</button>"
+         );
+
+      $("#placeholder").html("<div class='member-form'><div class='member-item'><span>Name: " + res.name + "</span></div>" +
+         "<div class='member-item'>Signed up: " + new Date(res.start_timestamp * 1000) + "</div>" +
+         membership_buttons + memb_info +
+         "</div>");
    }, show_error);
 }
 
@@ -332,6 +458,7 @@ connection.onopen = function (session, details) {
    session.subscribe('com.members.healthcheck', healthcheck).then(
       function (sub) {
       }, show_error);
+   session.subscribe('com.payments.update_history', function (r) { refresh_transaction_history(r[0]); });
    healthcheck_interval = setInterval(healthcheck_update, 1000);
 };
 

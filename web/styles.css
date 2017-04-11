@@ -54,6 +54,11 @@ body {
     background-color: #3C6;
 }
 
+.selected {
+    background-color: #333;
+    color: #CCC;
+}
+
 ul {
     list-style-type: none;
 }
@@ -119,6 +124,11 @@ li {
     margin-left: 10px;
 }
 
+.res-table td {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
 #filter-member {
     margin-left: 50px;
 }
@@ -135,8 +145,30 @@ li {
     font-size: 1.25em;
 }
 
+#cc-authorization {
+    margin-left: 10px;
+    margin-top: 10px;
+}
+
 .member-item-span input[type=text] {
     font-size: 1.25em;
+}
+
+.member-item-info {
+    margin-top: 30px;
+    margin-right: 200px;
+    border: 1px solid black;
+    padding: 5px;
+}
+
+.subscription-info {
+    padding: 3px;
+    margin-left: 5px;
+    margin-top: 5px;
+}
+
+.subscription-info-containter-2 {
+    margin-left: -5px;
 }
 
 .daypass {
