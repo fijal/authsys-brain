@@ -1,6 +1,6 @@
 import os, time, re
 
-import treq, urllib
+import treq, urllib, json
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.logger import Logger
 from twisted.internet import reactor
@@ -129,8 +129,11 @@ class AppSession(ApplicationSession):
          ('authentication.password', conf.get('payment', 'password')),
          ('authentication.entityId', conf.get('payment', 'entityId')),
         ]])
+        print url + "?" + params
         r = yield treq.get(url + "?" + params)
-        r = yield r.json()
+        r = yield r.text()
+        print r
+        r = json.loads(r)
         member_id, sum, tp = q.payments_get_id_sum_tp(con, token_id)
         q.payments_write_transaction(con, member_id, "completed", time.time(),
             token_id, r['result']['code'], r['result']['description'], sum, tp)
