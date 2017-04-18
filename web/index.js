@@ -277,6 +277,16 @@ function daypass_change(button, no)
       $(button).text("day pass");
 }
 
+function freepass_change(button, no)
+{
+   connection.session.call('com.freepass.change', [no]).then(function(res) {
+   }, show_error);
+   if ($(button).text() == "free pass")
+      $(button).text("cancel free pass");
+   else
+      $(button).text("free pass");   
+}
+
 function update_visitor_list(filter)
 {
    var res = global_status.visitor_list;
@@ -285,13 +295,20 @@ function update_visitor_list(filter)
       var elem = res[i];
       if (elem[1].toLowerCase().search(filter.toLowerCase()) != -1) {
          var ts = new Date(elem[3] * 1000);
-         var text;
+         var text, free_pass_button, free_pass_text;
          if (elem[4] == null) {
             text = 'day pass';
          } else {
             text = 'cancel day pass';
          }
-         r += ('<li><button onclick="daypass_change(this, ' + elem[0] + ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + elem[0] + ')">' + elem[1] + 
+         if (elem[5] == null) {
+            free_pass_text = 'free pass';
+         } else {
+            free_pass_text = 'cancel free pass';
+         }
+         free_pass_button = '<button class="daypass" onclick="freepass_change(this, ' + elem[0] + ')">' + free_pass_text + '</button>';
+         r += ('<li>' + free_pass_button + '<button onclick="daypass_change(this, ' + elem[0] +
+               ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + elem[0] + ')">' + elem[1] + 
                ', ID number: ' + elem[2] + ', registered ' + ts + '</li></a>');
       }
    }

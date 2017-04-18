@@ -69,6 +69,9 @@ class AppSession(ApplicationSession):
     def daypass_change(self, no):
         q.daypass_change(con, no)
 
+    def freepass_change(self, no):
+        q.freepass_change(con, no)
+
     @inlineCallbacks
     def notify_transaction(self, no, tp):
         yield self.payment_gateway_request(no, tp)
@@ -198,6 +201,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.change_date, 'com.members.change_date')
         yield self.register(self.add_till, 'com.subscription.add_till')
         yield self.register(self.daypass_change, 'com.daypass.change')
+        yield self.register(self.freepass_change, 'com.freepass.change')
         yield self.register(self.get_member_data, 'com.members.get')
         yield self.register(self.list_indemnity_forms, 'com.forms.list')
         yield self.register(self.get_last_unassigned, 'com.tokens.get_last_unassigned')
