@@ -361,7 +361,7 @@ function update_entries()
          cls = "red";
          reason = "unknown token";
       } else {
-         if (elem[3] == null || elem[3] < elem[2]) {
+         if (elem[4] != 'perpetual' && (elem[3] == null || elem[3] < elem[2])) {
             cls = "red";
             reason = "no valid subscription";
          } else if (elem[4] == "before4" && entry_time.getHours() >= 16) {
