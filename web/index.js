@@ -181,12 +181,13 @@ function show_member_details(no)
          memb_info = "<div class='member-item-info'>No current membership</div>";
       } else if (res.member_type == "ondemand") {
          but3 = "selected";
+         var extra_buttons = "";
          if (res.subscription_type == null) {
             subscription = "no subscription";
+            extra_buttons = get_extra_buttons(res.member_id, "add", false, new Date());
          } else {
             var valid_till = new Date(res.subscription_ends * 1000);
             var exp = "";
-            var extra_buttons = "";
             if (valid_till > new Date()) {
                cls = "green";
                exp = ", valid till " + valid_till.toDateString();
