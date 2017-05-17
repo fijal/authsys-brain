@@ -22,6 +22,7 @@ function show_error(err) {
 }
 
 connection.onopen = function (session, details) {
+    $("form")[0].action = document.location.protocol + "//" + document.location.host + "/finish.html";
     connection.session.call("com.payments.get_form", [location.search.substr(1)]).then(
       function (r) {
         $("h1").text("");
