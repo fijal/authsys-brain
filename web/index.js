@@ -234,7 +234,7 @@ function show_member_details(no)
          "<button class='" + but4 + "'onclick='change_membership(" + res.member_id + ",\"perpetual\")' type='button'>Perpetual membership</button>"
          );
 
-      $("#placeholder").html("<div class='member-form'><div class='member-item'><span>Name: " + res.name + "</span></div>" +
+      $("#placeholder").html("<div class='member-form'><div class='member-item'><span>ID: " + res.member_id + "</span> <span>Name: " + res.name + "</span></div>" +
          "<div class='member-item'>Signed up: " + new Date(res.start_timestamp * 1000) + "</div>" +
          membership_buttons + memb_info +
          "</div>");

@@ -139,11 +139,11 @@ class AppSession(ApplicationSession):
         r = json.loads(r)
         member_id, sum, tp = q.payments_get_id_sum_tp(con, token_id)
         q.payments_write_transaction(con, member_id, "completed", time.time(),
-            token_id, r['result']['code'], r['result']['description'], sum, tp)
+            r['id'], r['result']['code'], r['result']['description'], sum, tp)
         self.publish('com.payments.update_history', member_id)
         if re.search("^(000\.000\.|000\.100\.1|000\.[36])", r['result']['code']):
             q.add_one_month_subscription(con, member_id, tp, t0=time.time())
-            q.record_credit_card_token(con, member_id, token_id)
+            q.record_credit_card_token(con, member_id, r['id'])
             returnValue((True, conf.get("url", "auth")))
         returnValue((False, conf.get("url", "auth")))
 
