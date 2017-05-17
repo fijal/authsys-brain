@@ -55,7 +55,7 @@ def schedule(iter):
         return
     counter += 1
     recurring_payment(con, n[1][1], n[0], n[1][2], payment_check, dry_run=dry_run)
-    reactor.callLater(0, schedule, iter)
+    reactor.callLater(5, schedule, iter)
 
 reactor.callLater(0, schedule, members_to_update.iteritems())
 reactor.run()
