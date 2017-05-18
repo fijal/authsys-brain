@@ -23,6 +23,9 @@ counter = 1
 
 if len(sys.argv) > 1 and sys.argv[1] == '--dry':
     dry_run = True
+elif len(sys.argv)> 1:
+    print "Unknown arguments"
+    sys.exit(1)
 else:
     dry_run = False
 
