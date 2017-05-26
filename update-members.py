@@ -6,16 +6,22 @@ import treq, re, time, sys
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 from twisted.python import log
+from twisted.logger import globalLogBeginner, textFileLogObserver
 from sqlalchemy import create_engine
+from StringIO import StringIO
+
+stream = StringIO()
 
 from authsys_common.payments import recurring_payment
-from authsys_common.scripts import get_db_url
+from authsys_common.scripts import get_db_url, get_email_conf
 from authsys_common import queries as q
 
 eng = create_engine(get_db_url())
 con = eng.connect()
 
-log.startLogging(sys.stderr)
+globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stderr),
+                                  textFileLogObserver(stream)])
+#log.startLogging(sys.stderr)
 
 members_to_update = q.members_to_update(con)
 
@@ -62,3 +68,17 @@ def schedule(iter):
 
 reactor.callLater(0, schedule, members_to_update.iteritems())
 reactor.run()
+
+def send_email(target):
+    import smtplib
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(*get_email_conf())
+    msg = """Subject: Summary of bookings
+From: bloc.eleven@gmail.com
+
+%s
+""" % stream.getvalue()
+    server.sendmail("bloc.eleven@gmail.com", "fijall@gmail.com", msg)
+
+send_email(None)
