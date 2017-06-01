@@ -288,6 +288,17 @@ function freepass_change(button, no)
       $(button).text("free pass");   
 }
 
+function league_change(button, no)
+{
+   connection.session.call('com.league.change', [no]).then(function(res) {
+   }, show_error);
+   if ($(button).text() == "register for league")
+      $(button).text("unregister for league");
+   else
+      $(button).text("register for league");   
+
+}
+
 function update_visitor_list(filter)
 {
    var res = global_status.visitor_list;
@@ -296,7 +307,7 @@ function update_visitor_list(filter)
       var elem = res[i];
       if (elem[1].toLowerCase().search(filter.toLowerCase()) != -1) {
          var ts = new Date(elem[3] * 1000);
-         var text, free_pass_button, free_pass_text;
+         var text, free_pass_button, free_pass_text, league_text, league_button;
          if (elem[4] == null) {
             text = 'day pass';
          } else {
@@ -307,8 +318,14 @@ function update_visitor_list(filter)
          } else {
             free_pass_text = 'cancel free pass';
          }
+         if (elem[6] == null) {
+            league_text = 'register for league';
+         } else {
+            league_text = 'unregister for league';
+         }
          free_pass_button = '<button class="daypass" onclick="freepass_change(this, ' + elem[0] + ')">' + free_pass_text + '</button>';
-         r += ('<li>' + free_pass_button + '<button onclick="daypass_change(this, ' + elem[0] +
+         league_button = '<button class="daypass" onclick="league_change(this, ' + elem[0] + ')">' + league_text + '</button>';
+         r += ('<li>' + free_pass_button + league_button + '<button onclick="daypass_change(this, ' + elem[0] +
                ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + elem[0] + ')">' + elem[1] + 
                ', ID number: ' + elem[2] + ', registered ' + ts + '</li></a>');
       }
