@@ -35,11 +35,33 @@ elif len(sys.argv)> 1:
 else:
     dry_run = False
 
+class MessageLog(object):
+    def __init__(self):
+        self.d = {}
+
+    def add_name(self, member_id, name):
+        self.d[member_id] = (name,)
+
+    def add_result(self, member_id, result):
+        self.d[member_id] = (self.d[member_id][0], result['result']['description'])
+
+    def summary(self):
+        try:
+            msgs = []
+            for k, v in self.d.iteritems():
+                msgs.append("%s: %s" % (v[0], v[1]))
+            return "\n".join(msgs)
+        except:
+            return "Error processing the result"
+
+msg_log = MessageLog()
+
 @inlineCallbacks
 def payment_check(res, member_id, tp, sum):
     global counter
     if not dry_run:
         r = yield res.json()
+        msg_log.add_result(member_id, r)
         print r
         q.payments_write_transaction(con, member_id, "completed", time.time(),
                 r['id'], r['result']['code'], r['result']['description'], sum, tp)
@@ -62,8 +84,12 @@ def schedule(iter):
         if counter == 0:
             reactor.stop()
         return
+    member_id  = n[0]
+    tp = n[1][2]
     counter += 1
-    recurring_payment(con, n[1][1], n[0], n[1][2], payment_check, dry_run=dry_run)
+    name = n[1][0]
+    recurring_payment(con, n[1][1], member_id, tp, payment_check, dry_run=dry_run)
+    msg_log.add_name(member_id, name)
     reactor.callLater(5, schedule, iter)
 
 reactor.callLater(0, schedule, members_to_update.iteritems())
@@ -78,7 +104,16 @@ def send_email(target):
 From: bloc.eleven@gmail.com
 
 %s
-""" % stream.getvalue()
+
+
+
+Raw transcript of the transaction:
+
+
+
+%s
+""" % (msg_log.summary(), stream.getvalue())
     server.sendmail("bloc.eleven@gmail.com", "fijall@gmail.com", msg)
 
-send_email(None)
+if not dry_run:
+    send_email(None)
