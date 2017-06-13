@@ -85,7 +85,7 @@ def schedule(iter):
             reactor.stop()
         return
     member_id  = n[0]
-    tp = n[1][2]
+    tp = n[1][4]
     counter += 1
     name = n[1][0]
     recurring_payment(con, n[1][1], member_id, tp, payment_check, dry_run=dry_run)
