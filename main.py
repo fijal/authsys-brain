@@ -173,6 +173,9 @@ class AppSession(ApplicationSession):
         r = yield r.text("utf-8")
         returnValue(str(r))
 
+    def update_data(self, user_id):
+        self.publish('com.members.update_data_broadcast', [user_id])
+
     def get_stats(self):
         return q.get_stats(con)
 
@@ -205,6 +208,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.list_entries, 'com.members.list_entries')
         yield self.register(self.reader_visible, 'com.members.reader_visible')
         yield self.register(self.change_date, 'com.members.change_date')
+        yield self.register(self.update_data, 'com.members.update_data')
         yield self.register(self.add_till, 'com.subscription.add_till')
         yield self.register(self.daypass_change, 'com.daypass.change')
         yield self.register(self.freepass_change, 'com.freepass.change')

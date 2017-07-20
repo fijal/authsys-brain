@@ -299,35 +299,36 @@ function league_change(button, no)
 
 }
 
+function recapture_data(user_id)
+{
+   connection.session.call('com.members.update_data', [user_id]);
+}
+
 function update_visitor_list(filter)
 {
    var res = global_status.visitor_list;
    var r = "<ul>";
    for (var i in res) {
       var elem = res[i];
-      if (elem[1].toLowerCase().search(filter.toLowerCase()) != -1) {
-         var ts = new Date(elem[3] * 1000);
-         var text, free_pass_button, free_pass_text, league_text, league_button;
-         if (elem[4] == null) {
+      if (elem.name.toLowerCase().search(filter.toLowerCase()) != -1) {
+         var ts = new Date(elem.timestamp * 1000);
+         var text, free_pass_button, free_pass_text, recapture_button;
+         if (elem.last_daypass_timestamp == null) {
             text = 'day pass';
          } else {
             text = 'cancel day pass';
          }
-         if (elem[5] == null) {
+         if (elem.free_pass_timestamp == null) {
             free_pass_text = 'free pass';
          } else {
             free_pass_text = 'cancel free pass';
          }
-         if (elem[6] == null) {
-            league_text = 'register for league';
-         } else {
-            league_text = 'unregister for league';
-         }
-         free_pass_button = '<button class="daypass" onclick="freepass_change(this, ' + elem[0] + ')">' + free_pass_text + '</button>';
-         league_button = '<button class="daypass" onclick="league_change(this, ' + elem[0] + ')">' + league_text + '</button>';
-         r += ('<li>' + free_pass_button + league_button + '<button onclick="daypass_change(this, ' + elem[0] +
-               ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + elem[0] + ')">' + elem[1] + 
-               ', ID number: ' + elem[2] + ', registered ' + ts + '</li></a>');
+         free_pass_button = '<button class="daypass" onclick="freepass_change(this, ' + elem.member_id + ')">' + free_pass_text + '</button>';
+         recapture_button = '<button class="daypass" onclick="recapture_data(' + elem.member_id + ')">ask for contact update</button>';
+         r += ('<li>' + recapture_button + free_pass_button + '<button onclick="daypass_change(this, ' + elem.member_id +
+               ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + 
+               elem.member_id + ')">' + elem.name + 
+               '</a>, email: ' + elem.email + ', phone: ' + elem.phone + ', emergency phone: ' + elem.emergency_phone + '</li>');
       }
    }
    r += "</ul>"
