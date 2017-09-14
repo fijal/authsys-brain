@@ -484,10 +484,13 @@ function update_entries()
             cls = "green";
          }
       }
+      var extra = elem[4];
+      if (!extra)
+         extra = elem[5];
       if (reason) {
-         reason = reason + ", " + elem[4];
+         reason = reason + ", " + extra;
       } else {
-         reason = elem[4];
+         reason = extra;
       }
       var name;
       if (elem[1] != null)
