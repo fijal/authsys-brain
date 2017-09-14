@@ -475,10 +475,10 @@ function update_entries()
             reason = "no valid subscription";
          } else if (elem[4] == "before4" && entry_time.getHours() >= 16) {
             cls = "red";
-            reason = "entry after 4pm for subscription before 4pm";
+            reason = "entry after 4pm";
          } else if (new Date(elem[3] * 1000) - entry_time < 3600 * 24 * 1000) {
             cls = "yellow";
-            reason = "subscription expiring in less than 24h";
+            reason = "expiring in less than 24h";
          } else {
             reason = "";
             cls = "green";
