@@ -1,0 +1,211 @@
+<div class='member-form'>
+  <div class='member-item'>
+    <span>ID: {{ member_id }}</span>
+    <span>Name: <span class="current-user">{{ name }}</span></span>
+  </div>
+  <div class='member-item'>Signed up: {{ start }}</div>
+  <div class='member-item'>Membership type:
+    <button type="button"
+    {% if member_type == null %}
+       class="btn btn-primary"
+    {% else %}
+       class="btn btn-secondary"
+    {% endif %} onclick='change_membership({{ member_id }}, "none")'> No membership</button>
+    <button type='button' onclick='change_membership({{ member_id }}, "recurring")'
+    {% if member_type == "recurring" %}
+       class="btn btn-primary"
+    {% else %}
+       class="btn btn-secondary"
+    {% endif %}>Recurring membership</button>
+    <button type="button" onclick='change_membership({{ member_id }}, "ondemand")' 
+    {% if member_type == "ondemand" %}
+       class="btn btn-primary"
+    {% else %}
+       class="btn btn-secondary"
+    {% endif %}>On demand membership</button>
+    <button type="button" onclick='change_membership({{ member_id }}, "perpetual")'
+    {% if member_type == "perpetual" %}
+       class="btn btn-primary"
+    {% else %}
+       class="btn btn-secondary"
+    {% endif %}>Perpetual membership</button>
+  </div>
+      {% if member_type == null %}
+  <div class='member-item'>
+      No current membership
+  </div>
+      {% elif member_type == "recurring" %}
+  <div class='member-item'>
+      <div class="row space-below">
+        <div class="col-6">
+        <div id="cc-info">
+        {% if credit_card_id == null %}
+           No credit card on file
+        {% else %}
+           Credit card known
+        {% endif %}
+        </div>
+        </div>
+        <div class="col-3">
+         <button type="button" class="btn btn-block btn-success" onclick="initiate_ipad_transaction({{ member_id }}, '{{ subscription_type }}')">Initiate payment</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-3">Membership type:</div>
+        <div class="col-9">
+            <div class="row">
+                <div class="col-4 outline">
+                    <div id="regular" onclick='change_subscription_type({{ member_id }}, "regular")' class="type-button btn btn-block btn-secondary">Regular (R{{ prices.regular }})</div>
+                </div>
+                <div class="col-4 outline">
+                    <div id="youth" onclick='change_subscription_type({{ member_id }}, "youth")' class="type-button btn btn-block btn-secondary">Youth (R{{ prices.youth }})</div>
+                </div>
+                <div class="col-4 outline">
+                    <div id="before4" onclick='change_subscription_type({{ member_id }}, "before4")' class="type-button btn btn-block btn-secondary">Before 4 (R{{ prices.before4 }})</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4 outline">
+                    <div id="yogaclimbing" onclick='change_subscription_type({{ member_id }}, "yogaclimbing")' class="type-button btn btn-block btn-secondary">Yoga + climbing (R{{ prices.yogaclimbing }})</div>
+                </div>
+                <div class="col-4 outline">
+                    <div id="yoga" onclick='change_subscription_type({{ member_id }}, "yoga")' class="type-button btn btn-block btn-secondary">Just yoga (R{{ prices.yoga}})</div>
+                </div>
+            </div>
+        </div>
+      </div>
+      {% if credit_card_token != null %}
+      <div class="row">
+        <div class="col-3">
+          Next charge:
+        </div>
+        <div class="col-9">
+         {% if subscription_ends != null %}
+         <span id="next-charge-price">{{ next_charge_price }}</span> at <span id="next-charge-date">{{ next_charge_date }}</span>
+         {% else %}
+         <span>Member not subscribed yet</span>
+         {% endif %}
+        </div>
+      </div>
+      {% endif %}
+      {% if pause_starts != null %}
+      </div>
+      <div class="member-item">
+      <div class="row">
+        <div class="col-3">
+           Membership paused:
+        </div>
+        <div class="col-9">
+          <div class="form-group">
+            <div class='input-group date' id='datetimepicker1'>
+              <input type='text' class="form-control" />
+              <span class="input-group-addon">
+                <span class="fa fa-calendar"></span>
+              </span>
+            </div>
+          </div>
+          till
+          <div class="form-group">
+            <div class='input-group date' id='datetimepicker2'>
+              <input type='text' class="form-control" />
+              <span class="input-group-addon">
+                <span class="fa fa-calendar"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    <div class="member-item">
+      <div class="row">
+        <div class="col-12">
+          Operations: <button data-toggle="modal" data-target="#cancel-membership-modal" type="button" class="btn btn-info">Cancel membership</button>
+          {% if pause_starts == null %}
+          <button onclick="pause_membership({{ member_id }})" type="button" class="btn btn-info">Pause membership</button>
+          {% else %}
+          <button onclick="unpause_membership({{ member_id }})" type="button" class="btn btn-info">Unpause membership</button>
+          {% endif %}
+          <span class="alert alert-danger collapse" id="error-contents" role="alert"><span id="error-contents-inside">Some contents</span>&nbsp;&nbsp;<a href="#" onclick="$('#error-contents').hide(); return false;">&times;</a></span>
+        </div>
+      </div>
+    </div>
+    <div class="member-item">
+      <div class="row">
+          <div class="col-3">Transaction history:</div>
+          <div class="col-9">
+            <div id="list-of-operations"></div>
+          </div>
+      </div>
+    </div>
+      {% elif member_type == "ondemand" %}
+    <div class="member-item">
+        <div class="row">
+        <div class="col-3">Membership type:</div>
+        <div class="col-9">
+            <div class="row">
+                <div class="col-4 outline">
+                    <div id="regular" onclick='change_subscription_type({{ member_id }}, "regular")' class="type-button btn btn-block btn-secondary">Regular (R{{ prices.regular }})</div>
+                </div>
+                <div class="col-4 outline">
+                    <div id="youth" onclick='change_subscription_type({{ member_id }}, "youth")' class="type-button btn btn-block btn-secondary">Youth (R{{ prices.youth }})</div>
+                </div>
+                <div class="col-4 outline">
+                    <div id="before4" onclick='change_subscription_type({{ member_id }}, "before4")' class="type-button btn btn-block btn-secondary">Before 4 (R{{ prices.before4 }})</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4 outline">
+                    <div id="yogaclimbing" onclick='change_subscription_type({{ member_id }}, "yogaclimbing")' class="type-button btn btn-block btn-secondary">Yoga + climbing (R{{ prices.yogaclimbing }})</div>
+                </div>
+                <div class="col-4 outline">
+                    <div id="yoga" onclick='change_subscription_type({{ member_id }}, "yoga")' class="type-button btn btn-block btn-secondary">Just yoga (R{{ prices.yoga}})</div>
+                </div>
+            </div>
+        </div>
+        </div>
+        {% if subscription_ends == null %}
+          <div class="row">
+            <div class="col-12">
+              Operations: <button onclick="add_one_month({{member_id}}, '{{ subscription_type }}')" type="button" class="btn btn-info">Add one month membership</button>
+            </div>
+          </div>
+        {% else %}
+        <div class="row">
+            <div class="col-3">
+            Current subscription expires at
+            </div>
+            <div class="col-9">
+                <div class="form-group">
+                    <div class='input-group date' id='memberexpiry'>
+                        <input type='text' class="form-control" />
+                        <span class="input-group-addon">
+                            <span class="fa fa-calendar"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+              Operations: <button onclick="remove_membership({{ member_id }})" type="button" class="btn btn-info">Remove subscription</button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+      {% elif member_type == "perpetual" %}
+    <div class="member-item">
+      Perpetual membership (routesetters etc.)
+    </div>
+      {% else %}
+    <div class="member-itm">
+      error, unknown member type {{ member_type }}!
+    </div>
+      {% endif %}
+    <div class='member-item'><p>Extra notes: <pre>{{ extra_notes }}</pre></p>
+      <p>
+        <button type="button" data-toggle="modal" data-target="#edit-notes-modal" class='btn btn-info'>Edit &gt;&gt;</button>
+      </p>
+    </div>
+  </div>
+</div>

@@ -10,6 +10,8 @@ if (document.location.origin == "file://") {
 }
 
 
+nunjucks.configure({'web': {'async': true}});
+
 // the WAMP connection to the Router
 //
 var connection = new autobahn.Connection({
@@ -77,10 +79,37 @@ function remove_membership(no)
       function (res) { show_member_details(no) }, show_error);
 }
 
+function add_one_month(no, tp)
+{
+   connection.session.call('com.subscription.add_one_month', [no, tp]).then(
+      function(res) { show_member_details(no) }, show_error);
+}
+
 function change_membership(no, tp)
 {
+   if (no == null)
+      no = global_status.member_id;
    connection.session.call('com.members.change_membership_type', [no, tp]).then(
       function (res) { show_member_details(no); }, show_error);
+}
+
+function change_expiry_date(no, end_timestamp)
+{
+   connection.session.call('com.subscription.change_expiry_date', [no, end_timestamp]).then(
+      function(res) { show_member_details(no) }, show_error);   
+}
+
+function change_subscription_type(no, tp)
+{
+   connection.session.call('com.members.change_subscription_type', [no, tp]).then(
+      function (res) { show_member_details(no); }, show_error);
+/*   var elem;
+   elem = $(".type-button.btn-primary");
+   elem.removeClass("btn-primary");
+   elem.addClass("btn-secondary");
+   elem = $("#" + tp);
+   elem.removeClass("btn-secondary");
+   elem.addClass('btn-primary');*/
 }
 
 function addMonths (date, count) {
@@ -105,14 +134,18 @@ function refresh_transaction_history(no)
       for (var i in k)
       {
          var elem = k[i];
-         r += "<tr><td>" + (new Date(elem[2] * 1000)) + "</td>" +
+         r += "<tr><td>" + (moment(new Date(elem[2] * 1000)).format("HH:mm DD MMMM YYYY")) + "</td>" +
          "<td>" + elem[3] + "</td>" +
          "<td>" + elem[5] + "</td>" +
          "<td>R" + elem[6] + "</td>";
       }
       r += "</table>";
       $("#list-of-operations").html(r);
-      $("#cc-info").html(get_credit_card_info(res.credit_card_token));
+      if (res.credit_card_token) {
+         $("#cc-info").html("Credit card known");
+      } else {
+         $("#cc-info").html("no credit card on file");
+      }
    });
 }
 
@@ -123,38 +156,40 @@ function initiate_ipad_transaction(no, tp)
    }, show_error);
 }
 
-function get_extra_buttons(no, txt, del_button_flag, d)
+function pause_membership(no)
 {
-   var d2 = addMonths(d, 1);
-   var del_button = "<button onclick='remove_membership(" + no + ")' type='button'>delete last membership</button>";
-   if (!del_button_flag)
-      del_button = "";
-   return "<p class='subscription-info-containter-2'><span>" + del_button +
-   "<button onclick=\"add_membership('before4', " + no + ")\" type='button'>" + txt + " before 4pm until:</button>" +
-   "<button onclick=\"add_membership('regular', " + no + ")\" type='button'>" + txt + " regular until:</button>" +
-   "<span class='member-item-span'>Year: <input id='year-change' value='" + d2.getFullYear() + "' size=4 type='text'/> Month: " +
-   "<input id='month-change' value='" + (d2.getMonth() + 1) + "' size=2 type='text'/> Day: <input id='day-change' size=2 value='" + d2.getDate() + "' type='text'/>" + 
-   "</span></p>";
+   connection.session.call("com.members.pause", [no]).then(function (res) {
+      show_member_details(no, function (res) {
+         if (res.error) {
+            $("#error-contents-inside").html(res.error);
+            $("#error-contents").show();
+         }
+      });
+   }, show_error);
 }
 
-function get_pause_buttons(no)
+function unpause_membership(no)
 {
-   return "";
-   d = new Date();
-   return "<p id='pause-result'></p><p id='pause-container'>Pause from <input id='pause-start-year' value=" + d.getFullYear()  + 
-     " size=4>-<input size=2 id='pause-start-month'>-<input size=2 id='pause-start-day'> to <input size=4 id='pause-end-year' value=" +
-     d.getFullYear() + ">-<input size=2 id='pause-end-month'>-<input size=2 id='pause-end-day'>" +
-     "<button oclick='do_pause(" + no + ")' type='button'>Pause</button></p>";
+   connection.session.call("com.members.unpause", [no]).then(function (res) {
+      show_member_details(no, function (res) {
+         if (res.error) {
+            $("#error-contents-inside").html(res.error);
+            $("#error-contents").show();
+         }
+      });
+   }, show_error);
 }
 
-function get_credit_card_info(r)
+function pause_change(no, start, end)
 {
-   if (r == null) {
-      return "no credit card on file";
-   } else {
-      return "<span class='green'>credit card known</span>";
-   }
-
+   connection.session.call("com.members.pause_change", [no, start, end]).then(function (res) {
+      show_member_details(no, function (res) {
+         if (res.error) {
+            $("#error-contents-inside").html(res.error);
+            $("#error-contents").show();
+         }
+      });
+   }, show_error);   
 }
 
 function show_statistics()
@@ -168,12 +203,57 @@ function show_statistics()
    });
 }
 
-function show_member_details(no)
+var FA_DEFAULT_ICONS =  {
+   time: "fa fa-clock-o",
+   date: "fa fa-calendar",
+   up: "fa fa-arrow-up",
+   down: "fa fa-arrow-down"
+};
+
+function show_member_details(no, extra_callback)
 {
    connection.session.call('com.members.get', [no]).then(function (res) {
-      console.log(res);
-      $("#filter-member").hide();
-      var memb_info = "", subscription, cancel_button = "";
+      res.start = moment(new Date(res.start_timestamp * 1000)).format("DD MMMM YYYY");
+      res.next_charge_price = "R" + res.price;
+      global_status.member_id = res.member_id;
+      res.next_charge_date = moment(new Date(res.subscription_ends * 1000)).format("DD MMMM YYYY");
+      res.prices = global_status.prices;
+      nunjucks.render('member-details.html', res, function(err, html) {
+         $("#placeholder").html(html);
+         var elem = $("#" + res.subscription_type);
+         elem.removeClass("btn-secondary");
+         elem.addClass("btn-primary");
+         if (res.member_type == 'recurring') {
+            refresh_transaction_history(res.member_id);
+         }
+         $(".current-user").html(res.name);
+         $("#member-notes").val(res.extra_notes);
+         $("#filter-member").hide();
+         var timepicker = $('#datetimepicker1');
+         if (timepicker) {
+            timepicker.datetimepicker({
+               defaultDate: new Date(res.pause_starts * 1000),
+               format: 'DD MMMM YYYY',
+               icons: FA_DEFAULT_ICONS
+            }).on("dp.change", function (e) { pause_change(res.member_id, e.date.unix(), res.pause_ends) });
+            $("#datetimepicker2").datetimepicker({
+               defaultDate: new Date(res.pause_ends * 1000),
+               format: 'DD MMMM YYYY',
+               icons: FA_DEFAULT_ICONS
+            }).on("dp.change", function (e) { pause_change(res.member_id, res.pause_starts, e.date.unix() ); });
+         }
+         timepicker = $("#memberexpiry");
+         if (timepicker) {
+            timepicker.datetimepicker({
+               defaultDate: new Date(res.subscription_ends * 1000),
+               format: 'DD MMMM YYYY',
+               icons: FA_DEFAULT_ICONS
+            }).on("dp.change", function (e) { change_expiry_date(res.member_id, e.date.unix() + 23*3600 ); });
+         }
+         if (extra_callback) {
+            extra_callback(res);
+         }
+      /*var memb_info = "", subscription, cancel_button = "";
       var cls = "";
       var but1 = "", but2 = "", but3 = "", but4 = "";
       if (res.member_type == null) {
@@ -234,10 +314,11 @@ function show_member_details(no)
          "<button class='" + but4 + "'onclick='change_membership(" + res.member_id + ",\"perpetual\")' type='button'>Perpetual membership</button>"
          );
 
-      $("#placeholder").html("<div class='member-form'><div class='member-item'><span>ID: " + res.member_id + "</span> <span>Name: " + res.name + "</span></div>" +
-         "<div class='member-item'>Signed up: " + new Date(res.start_timestamp * 1000) + "</div>" +
-         membership_buttons + memb_info +
-         "</div>");
+      //$("#placeholder").html("<div class='member-form'><div class='member-item'><span>ID: " + res.member_id + "</span> <span>Name: " + res.name + "</span></div>" +
+      //   "<div class='member-item'>Signed up: " + new Date(res.start_timestamp * 1000) + "</div>" +
+      //   membership_buttons + memb_info +
+      //   "</div>");*/
+   });
    }, show_error);
 }
 
@@ -261,6 +342,12 @@ function filter_members()
 {
    update_member_list($("#filter-text")[0].value);
    return true;
+}
+
+function save_user_notes()
+{
+   connection.session.call('com.members.save_notes', [global_status.member_id, $("#member-notes").val()]).then(
+      function () { show_member_details(global_status.member_id); }, show_error);
 }
 
 function filter_visitors()
@@ -446,6 +533,7 @@ function show(which, elem)
 }
 
 function show_error(err) {
+   console.log(err);
    function stacktrace() { 
       function st2(f) {
          return !f ? [] : 
@@ -499,7 +587,11 @@ connection.onopen = function (session, details) {
       function (sub) {
       }, show_error);
    session.subscribe('com.payments.update_history', function (r) { refresh_transaction_history(r[0]); });
+   session.call('com.stats.get_prices', []).then(function (r) {
+      global_status.prices = r;
+   }, show_error);
    healthcheck_interval = setInterval(healthcheck_update, 1000);
+
 };
 
 

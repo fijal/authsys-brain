@@ -28,7 +28,7 @@ class AppSession(ApplicationSession):
     def get_member_data(self, no):
         return q.get_member_data(con, no)
 
-    def add_one_month(self, type, no):
+    def add_one_month(self, no, type):
         return q.add_one_month_subscription(con, no, type)
 
     def change_date(self, no, year, month, day):
@@ -45,6 +45,12 @@ class AppSession(ApplicationSession):
 
     def change_membership_type(self, no, tp):
         q.change_membership_type(con, no, tp)
+
+    def change_subscription_type(self, no, tp):
+        q.change_subscription_type(con, no, tp)
+
+    def subscription_change_end(self, no, end_timestamp):
+        q.change_subscription_ends(con, no, end_timestamp)
 
     def add_token(self, member_id, token_id):
         con.execute(tokens.insert().values(member_id=member_id, id=token_id,
@@ -90,12 +96,7 @@ class AppSession(ApplicationSession):
 
     def payment_gateway_request(self, no, tp):
         conf = get_config()
-        if tp == "before4":
-            price = conf.get("price", "before4")
-        elif tp == "youth":
-            price = conf.get("price", "youth")
-        else:
-            price = conf.get("price", "regular")
+        price = conf.get("price", tp)
         url = conf.get('payment', 'base') + '/v1/checkouts'
         name, email = q.get_customer_name_email(con, no)
         # invent
@@ -143,11 +144,11 @@ class AppSession(ApplicationSession):
         member_id, sum, tp = q.payments_get_id_sum_tp(con, token_id)
         q.payments_write_transaction(con, member_id, "completed", time.time(),
             r['registrationId'], r['result']['code'], r['result']['description'], sum, tp)
-        self.publish('com.payments.update_history', member_id)
         if re.search("^(000\.000\.|000\.100\.1|000\.[36])", r['result']['code']):
             q.add_one_month_subscription(con, member_id, tp, t0=time.time())
             q.record_credit_card_token(con, member_id, r['registrationId'])
             returnValue((True, conf.get("url", "auth")))
+        self.publish('com.payments.update_history', member_id)
         returnValue((False, conf.get("url", "auth")))
 
     def get_payment_history(self, no):
@@ -179,11 +180,27 @@ class AppSession(ApplicationSession):
     def get_stats(self):
         return q.get_stats(con)
 
+    def save_notes(self, member_id, notes):
+        q.save_notes(con, member_id, notes)
+
     def get_form(self, no):
         return q.get_form(con, no)
 
-    def pause_from_to(self, no, from_timestamp, to_timestamp):
-        xxx
+    def pause_membership(self, no):
+        return q.pause_membership(con, no)
+
+    def unpause_membership(self, no):
+        return q.unpause_membership(con, no)
+
+    def pause_change(self, no, from_timestamp, to_timestamp):
+        return q.pause_change(con, no, from_timestamp, to_timestamp)
+
+    def get_prices(self):
+        conf = get_config()
+        d = {}
+        for k in ['regular', 'youth', 'before4', 'yoga', 'yogaclimbing']:
+            d[k] = conf.get('price', k)
+        return d
 
     @inlineCallbacks
     def onJoin(self, details):
@@ -209,6 +226,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.reader_visible, 'com.members.reader_visible')
         yield self.register(self.change_date, 'com.members.change_date')
         yield self.register(self.update_data, 'com.members.update_data')
+        yield self.register(self.save_notes, 'com.members.save_notes')
         yield self.register(self.add_till, 'com.subscription.add_till')
         yield self.register(self.daypass_change, 'com.daypass.change')
         yield self.register(self.freepass_change, 'com.freepass.change')
@@ -218,14 +236,20 @@ class AppSession(ApplicationSession):
         yield self.register(self.get_last_unassigned, 'com.tokens.get_last_unassigned')
         yield self.register(self.add_one_month, 'com.subscription.add_one_month')
         yield self.register(self.remove_subscription, 'com.subscription.remove')
+        yield self.register(self.subscription_change_end, 'com.subscription.change_expiry_date')
         yield self.register(self.get_payment_form, 'com.payments.get_form')
         yield self.register(self.payment_check_status, 'com.payments.check_status')
         yield self.register(self.change_membership_type, 'com.members.change_membership_type')
+        yield self.register(self.change_subscription_type, 'com.members.change_subscription_type')
         yield self.register(self.notify_transaction, 'com.payments.notify_transaction')
         yield self.register(self.get_payment_history, 'com.payments.get_history')
-        yield self.register(self.pause_from_to, 'com.subscription.pause')
         yield self.register(self.get_stats, 'com.stats.get')
         yield self.register(self.get_form, 'com.forms.get')
+        yield self.register(self.get_prices, 'com.stats.get_prices')
+        yield self.register(self.pause_membership, 'com.members.pause')
+        yield self.register(self.unpause_membership, 'com.members.unpause')
+        yield self.register(self.pause_change, 'com.members.pause_change')
+        
         #self.log.info("procedure add2() registered")
 
         # PUBLISH and CALL every second .. forever

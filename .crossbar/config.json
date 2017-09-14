@@ -42,6 +42,13 @@
                             "type": "static",
                             "directory": "../web"
                         },
+                        "fonts": {
+                            "type": "static",
+                            "directory": "../web/fonts",
+                            "options": {
+                                "enable_directory_listing": true
+                            }
+                        },
                         "ws": {
                             "type": "websocket"
                         }

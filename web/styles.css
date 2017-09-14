@@ -1,14 +1,15 @@
 
 body {
     font-family: Helvetica;
-    background-color: #DDD;
+    background-color: #FFF;
 }
 
 .tabs {
     position: relative;
     background-color: #CCC;
     overflow: hidden;
-    margin: 0 auto;
+    margin: 0;
+    margin-bottom: 30px;
     width: 100%;
     font-weight: 300;
     font-size: 1.25em;
@@ -54,9 +55,13 @@ body {
     background-color: #3C6;
 }
 
-.selected {
-    background-color: #333;
-    color: #CCC;
+.current-user {
+    font-weight: bold;
+}
+
+.extra-space {
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 ul {
@@ -66,6 +71,16 @@ ul {
 li {
     margin-top: 10px;
     margin-bottom: 10px;
+}
+
+.outline {
+    padding-bottom: 5px;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.space-below {
+    margin-bottom: 20px;
 }
 
 .list-name {
@@ -116,7 +131,7 @@ li {
 }
 
 .member-item {
-    margin: 10px;
+    margin-bottom: 10px;
 }
 
 .member-form button {
@@ -129,16 +144,13 @@ li {
     padding-right: 10px;
 }
 
-#filter-member {
-    margin-left: 50px;
-}
-
 #filter-member input[type=text] {
     font-size: 1.25em;
 }
 
-#filter-visitor {
-    margin-left: 50px;
+ul {
+    margin: 0;
+    padding: 0;
 }
 
 #filter-visitor input[type=text] {
@@ -178,4 +190,13 @@ li {
 
 .member-item-span {
     margin-left: 20px;
+}
+
+.member-item {
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    background-color: #EEE;
+    font-family: Helvetica;
+    text-rendering: optimizeLegibility;
 }
