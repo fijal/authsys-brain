@@ -207,7 +207,11 @@ var FA_DEFAULT_ICONS =  {
    time: "fa fa-clock-o",
    date: "fa fa-calendar",
    up: "fa fa-arrow-up",
-   down: "fa fa-arrow-down"
+   down: "fa fa-arrow-down",
+   left: "fa fa-arrow-left",
+   right: "fa fa-arrow-right",
+   previous: "fa fa-backward",
+   next: "fa fa-forward"
 };
 
 function show_member_details(no, extra_callback)

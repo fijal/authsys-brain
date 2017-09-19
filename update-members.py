@@ -21,7 +21,7 @@ con = eng.connect()
 
 globalLogBeginner.beginLoggingTo([textFileLogObserver(sys.stderr),
                                   textFileLogObserver(stream)])
-#log.startLogging(sys.stderr)
+#log.startLogging(sys.stderr, setStdout=False)
 
 members_to_update = q.members_to_update(con)
 
