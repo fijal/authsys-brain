@@ -182,10 +182,10 @@ function unpause_membership(no)
 
 function pause_change(no, start, end)
 {
-   connection.session.call("com.members.pause_change", [no, start, end]).then(function (res) {
+   connection.session.call("com.members.pause_change", [no, start, end]).then(function (orig_res) {
       show_member_details(no, function (res) {
-         if (res.error) {
-            $("#error-contents-inside").html(res.error);
+         if (orig_res.error) {
+            $("#error-contents-inside").html(orig_res.error);
             $("#error-contents").show();
          }
       });
