@@ -165,9 +165,19 @@
         </div>
         </div>
         {% if subscription_ends == null %}
+          {% if last_subscr_ended != null %}
           <div class="row">
             <div class="col-12">
-              Operations: <button onclick="add_one_month({{member_id}}, '{{ subscription_type }}')" type="button" class="btn btn-info">Add one month membership</button>
+             Current subscription expired at {{ last_subscr_ended }}
+           </div>
+          </div>
+          {% endif %}
+          <div class="row">
+            <div class="col-12">
+              Operations: <button onclick="add_one_month({{member_id}}, '{{ subscription_type }}')" type="button" class="btn btn-info">Add one month from last membership</button>
+              <button onclick="add_one_month_from_now({{member_id}}, '{{ subscription_type }}')" type="button" class="btn btn-info">
+                Add one month from now
+              </button>
             </div>
           </div>
         {% else %}

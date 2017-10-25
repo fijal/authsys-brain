@@ -85,6 +85,12 @@ function add_one_month(no, tp)
       function(res) { show_member_details(no) }, show_error);
 }
 
+function add_one_month_from_now(no, tp)
+{
+   connection.session.call('com.subscription.add_one_month_from_now', [no, tp]).then(
+      function(res) { show_member_details(no) }, show_error);
+}
+
 function change_membership(no, tp)
 {
    if (no == null)
@@ -221,7 +227,10 @@ function show_member_details(no, extra_callback)
       res.next_charge_price = "R" + res.price;
       global_status.member_id = res.member_id;
       res.next_charge_date = moment(new Date(res.subscription_ends * 1000)).format("DD MMMM YYYY");
+      if (res.last_subscr_ended)
+         res.last_subscr_ended = moment(new Date(res.last_subscr_ended * 1000)).format("DD MMMM YYYY");
       res.prices = global_status.prices;
+      console.log(res);
       nunjucks.render('member-details.html', res, function(err, html) {
          $("#placeholder").html(html);
          var elem = $("#" + res.subscription_type);

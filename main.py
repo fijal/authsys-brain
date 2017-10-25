@@ -31,6 +31,9 @@ class AppSession(ApplicationSession):
     def add_one_month(self, no, type):
         return q.add_one_month_subscription(con, no, type)
 
+    def add_one_month_from_now(self, no, type):
+        return q.add_one_month_subscription(con, no, type, t0=time.time())
+
     def change_date(self, no, year, month, day):
         q.change_date(con, no, year, month, day)
 
@@ -235,6 +238,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.list_indemnity_forms, 'com.forms.list')
         yield self.register(self.get_last_unassigned, 'com.tokens.get_last_unassigned')
         yield self.register(self.add_one_month, 'com.subscription.add_one_month')
+        yield self.register(self.add_one_month_from_now, 'com.subscription.add_one_month_from_now')
         yield self.register(self.remove_subscription, 'com.subscription.remove')
         yield self.register(self.subscription_change_end, 'com.subscription.change_expiry_date')
         yield self.register(self.get_payment_form, 'com.payments.get_form')
