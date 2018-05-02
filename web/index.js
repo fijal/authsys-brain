@@ -25,6 +25,7 @@ function Status()
 {
    // move last_healtcheck here
    this.get_form_timestamp = 0;
+   this.visitor_form = false;
 
    this.reset = function() {
       this.get_form_timestamp = 0;
@@ -226,6 +227,7 @@ function show_member_details(no, extra_callback)
       res.start = moment(new Date(res.start_timestamp * 1000)).format("DD MMMM YYYY");
       res.next_charge_price = "R" + res.price;
       global_status.member_id = res.member_id;
+      global_status.visitor_form = false;
       res.next_charge_date = moment(new Date(res.subscription_ends * 1000)).format("DD MMMM YYYY");
       if (res.last_subscr_ended)
          res.last_subscr_ended = moment(new Date(res.last_subscr_ended * 1000)).format("DD MMMM YYYY");
@@ -339,14 +341,13 @@ function show_form(no)
 {
    connection.session.call('com.forms.get', [no]).then(function(res) {
       $("#filter-visitor").hide();
-      var r = ("Name: " + res[1] + "<br/>" + "ID no: " + res[2] +
-         "<br/><div id='form_get_parent'><span id='form_get_scanner' class='red'>Please scan tag now</span></div>" +
-         "<form onclick='return false;''>" +
-         "<input id='form_get_submit' disabled=true type=submit onclick='return add_member_async(); 'value='add member'/></form>")
-      $("#member_add_list").html(r);
       global_status.get_form_timestamp = new Date() / 1000;
-      global_status.member_id = res[0];
-      global_status.member_name = res[1];
+      global_status.member_id = res.id;
+      global_status.visitor_form = true;
+      global_status.member_name = res.name;
+      nunjucks.render('visitor-details.html', res, function(err, html) {
+         $("#member_add_list").html(html);
+      }, show_error);
    }, show_error);
    return false;
 }
@@ -360,7 +361,13 @@ function filter_members()
 function save_user_notes()
 {
    connection.session.call('com.members.save_notes', [global_status.member_id, $("#member-notes").val()]).then(
-      function () { show_member_details(global_status.member_id); }, show_error);
+      function () {
+         if (global_status.visitor_form) {
+            show_form(global_status.member_id);
+         } else {
+            show_member_details(global_status.member_id)
+         };
+      }, show_error);
 }
 
 function filter_visitors()
