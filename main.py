@@ -1,3 +1,6 @@
+
+from __future__ import print_function
+
 import os, time, re
 
 import treq, urllib, json
@@ -91,7 +94,7 @@ class AppSession(ApplicationSession):
     @inlineCallbacks
     def payment_gateway_continue(self, res, no, tp, price, memb_type):
         r = yield res.json()
-        print r
+        print(r)
         q.payments_write_transaction(con, no, "initial", time.time(), r['id'],
             r['result']['code'], r['result']['description'], price, memb_type)
         self.publish('com.payments.notify_broadcast', no, price)
@@ -139,10 +142,10 @@ class AppSession(ApplicationSession):
          ('authentication.password', conf.get('payment', 'password')),
          ('authentication.entityId', conf.get('payment', 'entityId')),
         ]])
-        print url + "?" + params
+        print(url + "?" + params)
         r = yield treq.get(url + "?" + params)
         r = yield r.text()
-        print r
+        print(r)
         r = json.loads(r)
         member_id, sum, tp = q.payments_get_id_sum_tp(con, token_id)
         q.payments_write_transaction(con, member_id, "completed", time.time(),
@@ -167,7 +170,7 @@ class AppSession(ApplicationSession):
 
     @inlineCallbacks
     def get_payment_form(self, path):
-        print "PAYMENT_FORM", path
+        print("PAYMENT_FORM", path)
         d = dict([x.split("=") for x in path.split("&")])
         no = d['id']
         id = q.get_last_payment_id(con, no)
@@ -201,7 +204,7 @@ class AppSession(ApplicationSession):
     def get_prices(self):
         conf = get_config()
         d = {}
-        for k in ['regular', 'youth', 'before4', 'yoga', 'yogaclimbing']:
+        for k in ['regular', 'youth', 'before4', 'yoga', 'couple']:
             d[k] = conf.get('price', k)
         return d
 
