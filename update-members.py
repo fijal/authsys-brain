@@ -90,7 +90,7 @@ def schedule(iter):
     name = n[1][0]
     recurring_payment(con, n[1][1], member_id, tp, payment_check, dry_run=dry_run)
     msg_log.add_name(member_id, name)
-    reactor.callLater(5, schedule, iter)
+    reactor.callLater(0, schedule, iter)
 
 reactor.callLater(0, schedule, members_to_update.iteritems())
 reactor.run()

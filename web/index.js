@@ -514,7 +514,7 @@ function update_entries()
       }
       var name;
       if (elem[1] != null)
-         name = elem[1]
+         name = elem[1] + " (" + elem[0] + ")"
       else
          name = "token: " + elem[0]
       r = "<li><span class='" + cls + " circle'></span><span><span class='list-name'>" + name
