@@ -79,6 +79,10 @@ def schedule(iter):
     try:
         n = iter.next()
         print "NEXT:", n
+        if n[0] == "Explosion":
+            print "NOT CHARGING DUE TO PROBLEMS, INVESTIGATE"
+            reactor.callLater(0, schedule, iter)
+            return
     except StopIteration:
         counter -= 1
         if counter == 0:
