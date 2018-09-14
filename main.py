@@ -198,6 +198,9 @@ class AppSession(ApplicationSession):
     def unpause_membership(self, no):
         return q.unpause_membership(con, no)
 
+    def check_one_month(self, no):
+        return q.check_one_month(con, no)
+
     def pause_change(self, no, from_timestamp, to_timestamp):
         return q.pause_change(con, no, from_timestamp, to_timestamp)
 
@@ -256,6 +259,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.pause_membership, 'com.members.pause')
         yield self.register(self.unpause_membership, 'com.members.unpause')
         yield self.register(self.pause_change, 'com.members.pause_change')
+        yield self.register(self.check_one_month, 'com.subscription.check_one_month')
         
         #self.log.info("procedure add2() registered")
 

@@ -88,6 +88,22 @@ function add_one_month(no, tp)
 
 function add_one_month_from_now(no, tp)
 {
+   connection.session.call('com.subscription.check_one_month', [no]).then(
+      function(res) {
+         global_status.member_id = no;
+         global_status.member_type = tp;
+         if (res) {
+            $("#check-one-month-modal").modal("show");
+         } else {
+            add_one_month_really();
+         }
+      }, show_error);
+}
+
+function add_one_month_really()
+{
+   var no = global_status.member_id;
+   var tp = global_status.member_type;
    connection.session.call('com.subscription.add_one_month_from_now', [no, tp]).then(
       function(res) { show_member_details(no) }, show_error);
 }
