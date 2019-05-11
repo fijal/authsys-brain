@@ -533,7 +533,7 @@ function update_entries()
          name = elem[1] + " (" + elem[0] + ")"
       else
          name = "token: " + elem[0]
-      r = "<li><span class='" + cls + " circle'></span><span class='list-name'><a onclick='show_member_details_from_access_log(\'" + elem[6] + "\'')' href='#'>" + name
+      r = "<li><span class='" + cls + " circle'></span><span class='list-name'><a onclick='show_member_details_from_access_log(\"" + elem[6] + "\")' href='#'>" + name
       r += "</a></span><span class='list-reason'>" + reason + "</span>" + parse_time(entry_time);
       r += "</span></li>"
       return r;
