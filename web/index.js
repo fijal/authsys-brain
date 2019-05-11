@@ -442,7 +442,16 @@ function update_visitor_list(filter)
    var r = "<ul>";
    for (var i in res) {
       var elem = res[i];
-      if (elem.name.toLowerCase().search(filter.toLowerCase()) != -1) {
+      var name = elem.name.toLowerCase();
+      var found = true;
+      var allitems = filter.toLowerCase.split(/ +/);
+      for (var item in allitems) {
+         if (name.search(allitems[item]) == -1) {
+            found = false;
+            break;
+         }
+      }
+      if (found) {
          var ts = new Date(elem.timestamp * 1000);
          var text, free_pass_button, free_pass_text, recapture_button;
          if (elem.last_daypass_timestamp == null) {
