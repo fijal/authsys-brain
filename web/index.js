@@ -40,7 +40,15 @@ function update_member_list(filter)
    var res = global_status.member_list;
    var r = "<ul>"
    for (var i in res) {
-      if (res[i][1].toLowerCase().search(filter.toLowerCase()) != -1)
+      var lc = res[i][1].toLowerCase();
+      var found = true;
+      for (var item in filter.split(/ +/)) {
+         if (lc.search(item) == -1) {
+            found = false;
+            break;
+         }
+      }
+      if (found)
          r += "<li><a href='#' onclick='show_member_details(" + res[i][0] + ")'>" + res[i][1] + "</a></li>";
    }
    r += "</ul>"
