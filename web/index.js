@@ -444,7 +444,7 @@ function update_visitor_list(filter)
       var elem = res[i];
       var name = elem.name.toLowerCase();
       var found = true;
-      var allitems = filter.toLowerCase.split(/ +/);
+      var allitems = filter.toLowerCase().split(/ +/);
       for (var item in allitems) {
          if (name.search(allitems[item]) == -1) {
             found = false;
