@@ -13,7 +13,7 @@
          <ul class="tabs-nav">
             <li class="selected"><a href="#" onclick="show('current_status', this); return false;">SYSTEM STATUS</a></li>
             <li class="selectable"><a href="#" onclick="show('list_entries', this); update_entries(); return false;">ACCESS LOG</a></li>
-            <li class="selectable"><a href="#" onclick="show('member_lookup', this); list_members_async(); return false;">MEMBERS</a></li>
+            <li id="member-lookup-li" class="selectable"><a href="#" onclick="show('member_lookup', this); list_members_async(); return false;">MEMBERS</a></li>
             <li class="selectable"><a href="#" onclick="show('member_add', this); list_indemnity_forms(); return false;">ALL VISITORS</a></li>
             <li class="selectable"><a href="#" onclick="show('statistics', this); show_statistics(); return false;">STATISTICS</a></li>
          </ul>
