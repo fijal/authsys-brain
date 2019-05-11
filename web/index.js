@@ -42,8 +42,9 @@ function update_member_list(filter)
    for (var i in res) {
       var lc = res[i][1].toLowerCase();
       var found = true;
-      for (var item in filter.split(/ +/)) {
-         if (lc.search(item) == -1) {
+      var allitems = filter.split(/ +/);
+      for (var item in allitems) {
+         if (lc.search(allitems[item]) == -1) {
             found = false;
             break;
          }
