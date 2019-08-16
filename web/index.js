@@ -410,14 +410,14 @@ function daypass_change(button, no)
       $(button).text("day pass");
 }
 
-function freepass_change(button, no)
+function member_visit_change(button, no)
 {
-   connection.session.call('com.freepass.change', [no]).then(function(res) {
+   connection.session.call('com.visit.change', [no]).then(function(res) {
    }, show_error);
-   if ($(button).text() == "free pass")
-      $(button).text("cancel free pass");
+   if ($(button).text() == "member visit")
+      $(button).text("cancel member visit");
    else
-      $(button).text("free pass");   
+      $(button).text("member visit");   
 }
 
 function league_change(button, no)
@@ -460,11 +460,11 @@ function update_visitor_list(filter)
             text = 'cancel day pass';
          }
          if (elem.free_pass_timestamp == null) {
-            free_pass_text = 'free pass';
+            free_pass_text = 'member visit';
          } else {
-            free_pass_text = 'cancel free pass';
+            free_pass_text = 'cancel member visit';
          }
-         free_pass_button = '<button class="daypass" onclick="freepass_change(this, ' + elem.member_id + ')">' + free_pass_text + '</button>';
+         free_pass_button = '<button class="daypass" onclick="member_visit_change(this, ' + elem.member_id + ')">' + free_pass_text + '</button>';
          recapture_button = '<button class="daypass" onclick="recapture_data(' + elem.member_id + ')">ask for contact update</button>';
          r += ('<li>' + recapture_button + free_pass_button + '<button onclick="daypass_change(this, ' + elem.member_id +
                ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + 

@@ -81,8 +81,8 @@ class AppSession(ApplicationSession):
     def daypass_change(self, no):
         q.daypass_change(con, no)
 
-    def freepass_change(self, no):
-        q.freepass_change(con, no)
+    def member_visit_change(self, no):
+        q.member_visit_change(con, no)
 
     def league_register(self, no):
         q.league_register(con, no)
@@ -238,7 +238,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.save_notes, 'com.members.save_notes')
         yield self.register(self.add_till, 'com.subscription.add_till')
         yield self.register(self.daypass_change, 'com.daypass.change')
-        yield self.register(self.freepass_change, 'com.freepass.change')
+        yield self.register(self.member_visit_change, 'com.visit.change')
         yield self.register(self.league_register, 'com.league.change')
         yield self.register(self.get_member_data, 'com.members.get')
         yield self.register(self.list_indemnity_forms, 'com.forms.list')
