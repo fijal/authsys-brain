@@ -117,7 +117,7 @@ class AppSession(ApplicationSession):
             'authentication.userId' : conf.get('payment', 'userId'),
             'authentication.password' : conf.get('payment', 'password'),
             'authentication.entityId' : conf.get('payment', 'entityId'),
-            'amount' : price + ".00",
+            'amount' : price,
             'currency' : 'ZAR',
             'paymentType' : 'DB',
             'recurringType': 'INITIAL',
