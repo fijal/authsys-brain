@@ -473,7 +473,7 @@ function update_visitor_list(filter)
                '</a>, email: ' + elem.email + ', phone: ' + elem.phone + ', emergency phone: ' + elem.emergency_phone + '</li>');
          j += 1;
       }
-      if (j > 100)
+      if (j > 30)
          break;
    }
    r += "</ul>"
