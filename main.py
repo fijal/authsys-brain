@@ -64,7 +64,7 @@ class AppSession(ApplicationSession):
 
     def register_token(self, token_id):
         con.execute(entries.insert().values(timestamp=int(time.time()), token_id=token_id))
-        self.publish('com.members.entry')
+        self.publish(u'com.members.entry')
         return q.is_valid_token(con, token_id, int(time.time()))
 
     def list_entries(self):
@@ -73,7 +73,7 @@ class AppSession(ApplicationSession):
 
     def reader_visible(self, no):
         self.readers_last_seen[no] = time.time()
-        self.publish('com.members.healthcheck', self.readers_last_seen)
+        self.publish(u'com.members.healthcheck', self.readers_last_seen)
 
     def get_last_unassigned(self, tstamp):
         return q.unrecognized_entries_after(con, tstamp)[0]
@@ -97,8 +97,8 @@ class AppSession(ApplicationSession):
         print(r)
         q.payments_write_transaction(con, no, "initial", time.time(), r['id'],
             r['result']['code'], r['result']['description'], price, memb_type)
-        self.publish('com.payments.notify_broadcast', no, price)
-        self.publish('com.payments.update_history', no)
+        self.publish(u'com.payments.notify_broadcast', no, price)
+        self.publish(u'com.payments.update_history', no)
 
     def payment_gateway_request(self, no, tp):
         conf = get_config()
@@ -154,7 +154,7 @@ class AppSession(ApplicationSession):
             q.add_one_month_subscription(con, member_id, tp, t0=time.time())
             q.record_credit_card_token(con, member_id, r['registrationId'])
             returnValue((True, conf.get("url", "auth")))
-        self.publish('com.payments.update_history', member_id)
+        self.publish(u'com.payments.update_history', member_id)
         returnValue((False, conf.get("url", "auth")))
 
     def get_payment_history(self, no):
@@ -181,7 +181,7 @@ class AppSession(ApplicationSession):
         returnValue(str(r))
 
     def update_data(self, user_id):
-        self.publish('com.members.update_data_broadcast', [user_id])
+        self.publish(u'com.members.update_data_broadcast', [user_id])
 
     def get_stats(self):
         return q.get_stats(con)
@@ -228,38 +228,38 @@ class AppSession(ApplicationSession):
         #    return x + y
 
         self.readers_last_seen = [0]
-        yield self.register(self.list_members, 'com.members.list')
-        yield self.register(self.add_token, 'com.tokens.add')
-        yield self.register(self.register_token, 'com.members.register_token')
-        yield self.register(self.list_entries, 'com.members.list_entries')
-        yield self.register(self.reader_visible, 'com.members.reader_visible')
-        yield self.register(self.change_date, 'com.members.change_date')
-        yield self.register(self.update_data, 'com.members.update_data')
-        yield self.register(self.save_notes, 'com.members.save_notes')
-        yield self.register(self.add_till, 'com.subscription.add_till')
-        yield self.register(self.daypass_change, 'com.daypass.change')
-        yield self.register(self.member_visit_change, 'com.visit.change')
-        yield self.register(self.league_register, 'com.league.change')
-        yield self.register(self.get_member_data, 'com.members.get')
-        yield self.register(self.list_indemnity_forms, 'com.forms.list')
-        yield self.register(self.get_last_unassigned, 'com.tokens.get_last_unassigned')
-        yield self.register(self.add_one_month, 'com.subscription.add_one_month')
-        yield self.register(self.add_one_month_from_now, 'com.subscription.add_one_month_from_now')
-        yield self.register(self.remove_subscription, 'com.subscription.remove')
-        yield self.register(self.subscription_change_end, 'com.subscription.change_expiry_date')
-        yield self.register(self.get_payment_form, 'com.payments.get_form')
-        yield self.register(self.payment_check_status, 'com.payments.check_status')
-        yield self.register(self.change_membership_type, 'com.members.change_membership_type')
-        yield self.register(self.change_subscription_type, 'com.members.change_subscription_type')
-        yield self.register(self.notify_transaction, 'com.payments.notify_transaction')
-        yield self.register(self.get_payment_history, 'com.payments.get_history')
-        yield self.register(self.get_stats, 'com.stats.get')
-        yield self.register(self.get_form, 'com.forms.get')
-        yield self.register(self.get_prices, 'com.stats.get_prices')
-        yield self.register(self.pause_membership, 'com.members.pause')
-        yield self.register(self.unpause_membership, 'com.members.unpause')
-        yield self.register(self.pause_change, 'com.members.pause_change')
-        yield self.register(self.check_one_month, 'com.subscription.check_one_month')
+        yield self.register(self.list_members, u'com.members.list')
+        yield self.register(self.add_token, u'com.tokens.add')
+        yield self.register(self.register_token, u'com.members.register_token')
+        yield self.register(self.list_entries, u'com.members.list_entries')
+        yield self.register(self.reader_visible, u'com.members.reader_visible')
+        yield self.register(self.change_date, u'com.members.change_date')
+        yield self.register(self.update_data, u'com.members.update_data')
+        yield self.register(self.save_notes, u'com.members.save_notes')
+        yield self.register(self.add_till, u'com.subscription.add_till')
+        yield self.register(self.daypass_change, u'com.daypass.change')
+        yield self.register(self.member_visit_change, u'com.visit.change')
+        yield self.register(self.league_register, u'com.league.change')
+        yield self.register(self.get_member_data, u'com.members.get')
+        yield self.register(self.list_indemnity_forms, u'com.forms.list')
+        yield self.register(self.get_last_unassigned, u'com.tokens.get_last_unassigned')
+        yield self.register(self.add_one_month, u'com.subscription.add_one_month')
+        yield self.register(self.add_one_month_from_now, u'com.subscription.add_one_month_from_now')
+        yield self.register(self.remove_subscription, u'com.subscription.remove')
+        yield self.register(self.subscription_change_end, u'com.subscription.change_expiry_date')
+        yield self.register(self.get_payment_form, u'com.payments.get_form')
+        yield self.register(self.payment_check_status, u'com.payments.check_status')
+        yield self.register(self.change_membership_type, u'com.members.change_membership_type')
+        yield self.register(self.change_subscription_type, u'com.members.change_subscription_type')
+        yield self.register(self.notify_transaction, u'com.payments.notify_transaction')
+        yield self.register(self.get_payment_history, u'com.payments.get_history')
+        yield self.register(self.get_stats, u'com.stats.get')
+        yield self.register(self.get_form, u'com.forms.get')
+        yield self.register(self.get_prices, u'com.stats.get_prices')
+        yield self.register(self.pause_membership, u'com.members.pause')
+        yield self.register(self.unpause_membership, u'com.members.unpause')
+        yield self.register(self.pause_change, u'com.members.pause_change')
+        yield self.register(self.check_one_month, u'com.subscription.check_one_month')
         
         #self.log.info("procedure add2() registered")
 

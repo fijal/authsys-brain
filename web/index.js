@@ -440,6 +440,7 @@ function update_visitor_list(filter)
 {
    var res = global_status.visitor_list;
    var r = "<ul>";
+   var j = 0;
    for (var i in res) {
       var elem = res[i];
       var name = elem.name.toLowerCase();
@@ -470,7 +471,10 @@ function update_visitor_list(filter)
                ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + 
                elem.member_id + ')">' + elem.name + 
                '</a>, email: ' + elem.email + ', phone: ' + elem.phone + ', emergency phone: ' + elem.emergency_phone + '</li>');
+         j += 1;
       }
+      if (j > 100)
+         break;
    }
    r += "</ul>"
    $("#member_add_list").html(r);
