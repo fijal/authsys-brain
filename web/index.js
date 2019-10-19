@@ -538,7 +538,8 @@ function update_entries()
             cls = "yellow";
             reason = "expiring in less than 24h";
          } else {
-            reason = "";
+            var days = Math.ceil((elem[3] - elem[2]) / 3600 / 24)
+            reason = ", expiring in " + days + " days";
             cls = "green";
          }
       }
