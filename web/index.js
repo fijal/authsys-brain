@@ -626,12 +626,12 @@ function healthcheck_update()
    var cur_time = new Date().getTime() / 1000;
    var diff = cur_time - last_healthcheck[0];
    if (diff < 3) {
-      $("#reader-status-circle").removeClass("red");
-      $("#reader-status-circle").addClass("green");
+      $("#reader-status-circle").removeClass("led-red");
+      $("#reader-status-circle").addClass("led-green");
       $("#reader-status-text").html("reader 1");
    } else {
-      $("#reader-status-circle").removeClass("green");
-      $("#reader-status-circle").addClass("red");
+      $("#reader-status-circle").removeClass("led-green");
+      $("#reader-status-circle").addClass("led-red");
       if (last_healthcheck[0] == 0)
          $("#reader-status-text").html("reader 1 never seen");
       else
