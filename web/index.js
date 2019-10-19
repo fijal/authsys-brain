@@ -539,7 +539,7 @@ function update_entries()
             reason = "expiring in less than 24h";
          } else {
             var days = Math.ceil((elem[3] - elem[2]) / 3600 / 24)
-            reason = ", expiring in " + days + " days";
+            reason = days + " days left";
             cls = "green";
          }
       }
