@@ -520,43 +520,43 @@ function update_entries()
    function show_entry(elem)
    {
       var r = "", cls, reason;
-      var entry_time = new Date(elem[2] * 1000);
-      if (elem[1] == null) {
+      var entry_time = new Date(elem.timestamp * 1000);
+      if (elem.token_id == null) {
          cls = "red";
          reason = "unknown token";
       } else {
-	  if (elem[5] == 'perpetual') {
+	  if (elem.member_type == 'perpetual') {
 	      cls = 'green';
 	      reason = '';
-	  } else if (elem[3] == null || elem[3] < elem[2]) {
+	  } else if (elem.subscription_end_timestamp == null || elem.subscription_end_timestamp < elem.timestamp) {
             cls = "red";
             reason = "no valid subscription";
-         } else if (elem[4] == "before4" && entry_time.getHours() >= 16) {
+         } else if (elem.sub_type == "before4" && entry_time.getHours() >= 16) {
             cls = "red";
             reason = "entry after 4pm";
-         } else if (new Date(elem[3] * 1000) - entry_time < 3600 * 24 * 1000) {
+         } else if (new Date(elem.timestamp * 1000) - entry_time < 3600 * 24 * 1000) {
             cls = "yellow";
             reason = "expiring in less than 24h";
          } else {
-            var days = Math.ceil((elem[3] - elem[2]) / 3600 / 24)
+            var days = Math.ceil((elem.subscription_end_timestamp - elem.timestamp) / 3600 / 24)
             reason = days + " days left";
             cls = "green";
          }
       }
-      var extra = elem[4];
+      var extra = elem.sub_type;
       if (!extra)
-         extra = elem[5];
+         extra = elem.member_type;
       if (reason) {
          reason = reason + ", " + extra;
       } else {
          reason = extra;
       }
       var name;
-      if (elem[1] != null)
-         name = elem[1] + " (" + elem[0] + ")"
+      if (elem.name != null)
+         name = elem.name
       else
-         name = "token: " + elem[0]
-      r = "<li><span class='" + cls + " circle'></span><span class='list-name'><a onclick='show_member_details_from_access_log(\"" + elem[6] + "\")' href='#'>" + name
+         name = "token: " + elem.token_id
+      r = "<li><span class='" + cls + " circle'></span><span class='list-name'><a onclick='show_member_details_from_access_log(\"" + elem.member_id + "\")' href='#'>" + name
       r += "</a></span><span class='list-reason'>" + reason + "</span>" + parse_time(entry_time);
       r += "</span></li>"
       return r;
