@@ -534,7 +534,7 @@ function update_entries()
          } else if (elem.sub_type == "before4" && entry_time.getHours() >= 16) {
             cls = "red";
             reason = "entry after 4pm";
-         } else if (new Date(elem.timestamp * 1000) - entry_time < 3600 * 24 * 1000) {
+         } else if (new Date(elem.subscription_end_timestamp * 1000) - entry_time < 3600 * 24 * 1000) {
             cls = "yellow";
             reason = "expiring in less than 24h";
          } else {
