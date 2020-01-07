@@ -16,6 +16,7 @@
             <li id="member-lookup-li" class="selectable"><a href="#" onclick="show('member_lookup', this); list_members_async(); return false;">MEMBERS</a></li>
             <li class="selectable"><a href="#" onclick="show('member_add', this); list_indemnity_forms(); return false;">ALL VISITORS</a></li>
             <li class="selectable"><a href="#" onclick="show('statistics', this); show_statistics(); return false;">STATISTICS</a></li>
+            <li class="selectable"><a href="#" onclick="show('vouchers', this); show_vouchers(); return false;">VOUCHERS</a></li>
          </ul>
       </div>
       <div class="container">
@@ -43,6 +44,45 @@
          <div id="statistics" style="display: none">
             <h1>Statistics</h1>
             <div id="statistics"></div>
+         </div>
+         <div id="vouchers" style="display: none">
+            <h1>Vouchers</h1>
+            <form target="_blank" action="/voucher/new" method="POST">
+               <div class="row">
+                  Last barcode scanned: <span id="barcode-scanner-contents"></span>
+               </div>
+               <div class="row">
+                  <button onclick="">Mark as used</button>
+               </div>
+               <hr>
+               <div class="row">
+                  <div class="col-3">
+                     Name and surname:
+                  </div>
+                  <div id="col-9">
+                     <input type="text" name="name">
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-3">
+                     Voucher issued for:
+                   </div>
+                   <div class="col-9">
+                     <input type="text" name="reason">
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-3">
+                     Extra info:
+                  </div>
+                  <div class="col-9">
+                     <input type="text" name="extra">
+                  </div>
+               </div>
+               <div class="row">
+                  <input type="submit" value="Generate voucher">
+               </div>
+            </form>
          </div>
       </div>
       <div class="modal fade" role="dialog" id="edit-notes-modal">

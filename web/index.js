@@ -235,6 +235,11 @@ function show_statistics()
    });
 }
 
+function show_vouchers()
+{
+
+}
+
 var FA_DEFAULT_ICONS =  {
    time: "fa fa-clock-o",
    date: "fa fa-calendar",
@@ -652,9 +657,16 @@ connection.onopen = function (session, details) {
       last_healthcheck = r;
    }
 
+   function update_voucher(v) {
+      $("barcode-scanner-contents").text(v);
+   }
+
    session.subscribe('com.members.entry', update_entries).then(
       function (sub) {
       }, show_error
+   );
+   session.subscribe('com.vouchers.scan', update_voucher).then(
+      function (sub) {}, show_error
    );
    session.subscribe('com.members.healthcheck', healthcheck).then(
       function (sub) {

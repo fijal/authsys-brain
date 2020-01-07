@@ -1,25 +1,69 @@
 
 from __future__ import print_function
 
-import os, time, re
+import os, time, re, py
+import barcode
+from fpdf import FPDF
+from cairosvg import svg2png
 
 import treq, urllib, json
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.logger import Logger
 from twisted.internet import reactor
 
+from txrestapi.resource import APIResource
+from txrestapi import methods
+
 from sqlalchemy import create_engine, select, outerjoin
 
 from autobahn.twisted.util import sleep
 from autobahn.twisted.wamp import ApplicationSession
 from autobahn.wamp.exception import ApplicationError
-from authsys_common.model import meta, members, entries, tokens
+from authsys_common.model import meta, members, entries, tokens, vouchers
 from authsys_common import queries as q
 from authsys_common.scripts import get_db_url, get_config
 
 eng = create_engine(get_db_url())
 con = eng.connect()
 meta.reflect(bind=eng)
+
+class VoucherManager(APIResource):
+    def __init__(self, arg):
+        APIResource.__init__(self)
+
+    @methods.POST('^/voucher/new$')
+    def voucher_gen(self, request):        
+        MAX_X = 210
+        MAX_Y = 297
+
+        f = FPDF('P', 'mm', 'A4')
+        f.add_page()
+        f.image(str(py.path.local(__file__).join('..', 'voucher_template.png')), 0, 0, MAX_X, MAX_Y)
+        f.set_font('Arial', '', 20)
+        f.text(70, 165, request.args['name'][0])
+        f.text(70, 201, request.args['reason'][0])
+        f.text(70, 236, request.args['extra'][0])
+        f.set_font('Arial', '', 14)
+
+        rand = os.urandom(8).encode('hex')
+
+        EAN = barcode.get_barcode_class('code128')
+
+        r = con.execute(vouchers.insert().values(fullname=request.args['name'][0],
+            reason=request.args['reason'][0], extra=request.args['extra'][0],
+            unique_id=rand, used=False, timestamp=int(time.time())))
+        no = str(r.lastrowid)
+
+        ean = EAN(str(rand))
+        fullname = ean.save('/tmp/ean13_barcode')
+        svg2png(url=fullname, write_to="/tmp/out.png", dpi=300)
+
+        f.image("/tmp/out.png", 10, 10, 100, 20)
+
+        f.text(165, 257, no)
+        request.setHeader('Content-Type', "application/pdf")
+        return f.output(dest='S')
+
 
 class AppSession(ApplicationSession):
 
