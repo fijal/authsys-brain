@@ -658,6 +658,7 @@ connection.onopen = function (session, details) {
    }
 
    function update_voucher(v) {
+      console.log(v);
       $("barcode-scanner-contents").text(v);
    }
 
