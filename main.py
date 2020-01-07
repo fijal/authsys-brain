@@ -38,7 +38,8 @@ class VoucherManager(APIResource):
 
         f = FPDF('P', 'mm', 'A4')
         f.add_page()
-        f.image(str(py.path.local(__file__).join('..', 'voucher_template.png')), 0, 0, MAX_X, MAX_Y)
+        pth = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'voucher_template.png')
+        f.image(pth, 0, 0, MAX_X, MAX_Y)
         f.set_font('Arial', '', 20)
         f.text(70, 165, request.args['name'][0])
         f.text(70, 201, request.args['reason'][0])
@@ -304,7 +305,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.unpause_membership, u'com.members.unpause')
         yield self.register(self.pause_change, u'com.members.pause_change')
         yield self.register(self.check_one_month, u'com.subscription.check_one_month')
-        
+
         #self.log.info("procedure add2() registered")
 
         # PUBLISH and CALL every second .. forever
