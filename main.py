@@ -315,7 +315,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.unpause_membership, u'com.members.unpause')
         yield self.register(self.pause_change, u'com.members.pause_change')
         yield self.register(self.check_one_month, u'com.subscription.check_one_month')
-        yield self.register(self.get_voucher, u'com.voucher.get')
+        yield self.register(self.get_voucher, u'com.vouchers.get')
 
         #self.log.info("procedure add2() registered")
 
