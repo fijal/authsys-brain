@@ -256,6 +256,14 @@ class AppSession(ApplicationSession):
             d[k] = conf.get('price', k)
         return d
 
+    def get_voucher(self, no):
+        r = list(con.execute(select([vouchers.c.unique_id, vouchers.c.fullname, vouchers.c.reason,
+            vouchers.c.extra]).where(and_(vouchers.c.unique_id == no, vouchers.c.used == False))))
+        if len(r) == 0:
+            return "Cannot find voucher"
+        _, fullname, reason, extra = r[0]
+        return "Name: " + fullname " , for: " + reason + " , extra info: " + extra
+
     @inlineCallbacks
     def onJoin(self, details):
         # SUBSCRIBE to a topic and receive events
@@ -305,6 +313,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.unpause_membership, u'com.members.unpause')
         yield self.register(self.pause_change, u'com.members.pause_change')
         yield self.register(self.check_one_month, u'com.subscription.check_one_month')
+        yield self.register(self.get_voucher, u'com.voucher.get')
 
         #self.log.info("procedure add2() registered")
 

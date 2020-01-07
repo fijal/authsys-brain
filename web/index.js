@@ -646,6 +646,7 @@ function healthcheck_update()
 
 var last_healthcheck = [0];
 var healthcheck_interval = null;
+var last_voucher = null;
 
 // fired when connection is established and session attached
 //
@@ -658,7 +659,14 @@ connection.onopen = function (session, details) {
    }
 
    function update_voucher(v) {
-      $("#barcode-scanner-contents").text(v[0]);
+      last_voucher = v[0];
+      connection.session.call('com.vouchers.get', [v[0]]).then(
+         function (v) {
+            $("#barcode-scanner-contents").text(v);
+         }, function (e) {
+            $("#barcode-scanner-contents").text("Cannot recognize voucher");
+         }
+      );
    }
 
    session.subscribe('com.members.entry', update_entries).then(
