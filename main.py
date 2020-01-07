@@ -262,7 +262,7 @@ class AppSession(ApplicationSession):
         if len(r) == 0:
             return "Cannot find voucher"
         _, fullname, reason, extra = r[0]
-        return "Name: " + fullname " , for: " + reason + " , extra info: " + extra
+        return "Name: " + fullname + " , for: " + reason + " , extra info: " + extra
 
     @inlineCallbacks
     def onJoin(self, details):
