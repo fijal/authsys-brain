@@ -14,7 +14,7 @@ from twisted.internet import reactor
 from txrestapi.resource import APIResource
 from txrestapi import methods
 
-from sqlalchemy import create_engine, select, outerjoin
+from sqlalchemy import create_engine, select, outerjoin, and_
 
 from autobahn.twisted.util import sleep
 from autobahn.twisted.wamp import ApplicationSession
