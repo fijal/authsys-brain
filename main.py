@@ -257,14 +257,15 @@ class AppSession(ApplicationSession):
         return d
 
     def get_voucher(self, no):
-        print(no)
         r = list(con.execute(select([vouchers.c.unique_id, vouchers.c.fullname, vouchers.c.reason,
             vouchers.c.extra]).where(and_(vouchers.c.unique_id == no, vouchers.c.used == False))))
-        print(r)
         if len(r) == 0:
             return "Cannot find voucher"
         _, fullname, reason, extra = r[0]
-        return "Name: " + fullname + " , for: " + reason + " , extra info: " + extra
+        return "Name: " + fullname + " for: " + reason + " extra info: " + extra
+
+    def invalidate_voucher(self, no):
+        con.execute(vouchers.update().where(vouchers.c.unique_id == no).values(used = True))
 
     @inlineCallbacks
     def onJoin(self, details):
@@ -316,6 +317,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.pause_change, u'com.members.pause_change')
         yield self.register(self.check_one_month, u'com.subscription.check_one_month')
         yield self.register(self.get_voucher, u'com.vouchers.get')
+        yield self.register(self.invalidate_voucher, u'com.vouchers.invalidate')
 
         #self.log.info("procedure add2() registered")
 

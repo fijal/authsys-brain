@@ -648,6 +648,15 @@ var last_healthcheck = [0];
 var healthcheck_interval = null;
 var last_voucher = null;
 
+function invalidate_voucher()
+{
+   if (!last_voucher)
+      return;
+   connection.session.call('com.vouchers.invalidate', [last_voucher]);
+   last_voucher = null;
+   $("#barcode-scanner-contents").text("Voucher invalidated");
+}
+
 // fired when connection is established and session attached
 //
 connection.onopen = function (session, details) {
