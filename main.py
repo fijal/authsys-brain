@@ -1,7 +1,7 @@
 
 from __future__ import print_function
 
-import os, time, re, py
+import os, time, re
 import barcode
 from fpdf import FPDF
 from cairosvg import svg2png
