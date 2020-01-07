@@ -257,8 +257,10 @@ class AppSession(ApplicationSession):
         return d
 
     def get_voucher(self, no):
+        print(no)
         r = list(con.execute(select([vouchers.c.unique_id, vouchers.c.fullname, vouchers.c.reason,
             vouchers.c.extra]).where(and_(vouchers.c.unique_id == no, vouchers.c.used == False))))
+        print(r)
         if len(r) == 0:
             return "Cannot find voucher"
         _, fullname, reason, extra = r[0]
