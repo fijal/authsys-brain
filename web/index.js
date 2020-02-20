@@ -530,10 +530,10 @@ function update_entries()
          cls = "red";
          reason = "unknown token";
       } else {
-	  if (elem.member_type == 'perpetual') {
-	      cls = 'green';
-	      reason = '';
-	  } else if (elem.subscription_end_timestamp == null || elem.subscription_end_timestamp < elem.timestamp) {
+	      if (elem.member_type == 'perpetual') {
+	          cls = 'green';
+	          reason = '';
+	      } else if (elem.subscription_end_timestamp == null || elem.subscription_end_timestamp < elem.timestamp) {
             cls = "red";
             reason = "no valid subscription";
          } else if (elem.sub_type == "before4" && entry_time.getHours() >= 16) {

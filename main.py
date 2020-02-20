@@ -50,8 +50,8 @@ class VoucherManager(APIResource):
 
         EAN = barcode.get_barcode_class('code128')
 
-        r = con.execute(vouchers.insert().values(fullname=request.args['name'][0],
-            reason=request.args['reason'][0], extra=request.args['extra'][0],
+        r = con.execute(vouchers.insert().values(fullname=request.args['name'][0].decode('utf8'),
+            reason=request.args['reason'][0].decode('utf8'), extra=request.args['extra'][0].decode('utf8'),
             unique_id=rand, used=False, timestamp=int(time.time())))
         no = str(r.lastrowid)
 
