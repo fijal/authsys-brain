@@ -262,7 +262,6 @@ function show_member_details(no, extra_callback)
       if (res.last_subscr_ended)
          res.last_subscr_ended = moment(new Date(res.last_subscr_ended * 1000)).format("DD MMMM YYYY");
       res.prices = global_status.prices;
-      console.log(res);
       nunjucks.render('member-details.html', res, function(err, html) {
          $("#placeholder").html(html);
          var elem = $("#" + res.subscription_type);
@@ -367,6 +366,31 @@ function show_member_details(no, extra_callback)
    }, show_error);
 }
 
+function sign_covid_indemnity(member_id, sign)
+{
+   connection.session.call('com.covid_indemnity.sign', [member_id, sign]).then(
+      function(res) {
+         if (res.success)
+            show_member_details(member_id, null);
+         else
+            show_error(res['error']);
+      }, show_error);
+   return false;
+}
+
+function sign_covid_indemnity_from_visitors(i, member_id, sign)
+{
+   connection.session.call('com.covid_indemnity.sign', [member_id, sign]).then(
+      function(res) {
+         if (res.success) {
+            global_status.visitor_list[i]['covid_indemnity_signed'] = sign;
+            filter_visitors();
+         } else
+            show_error(res['error']);
+      }, show_error);
+   return false;
+}
+
 function show_form(no)
 {
    connection.session.call('com.forms.get', [no]).then(function(res) {
@@ -443,6 +467,7 @@ function recapture_data(user_id)
 
 function update_visitor_list(filter)
 {
+   var covid_button;
    var res = global_status.visitor_list;
    var r = "<ul>";
    var j = 0;
@@ -471,10 +496,21 @@ function update_visitor_list(filter)
             free_pass_text = 'cancel member visit';
          }
          free_pass_button = '<button class="daypass" onclick="member_visit_change(this, ' + elem.member_id + ')">' + free_pass_text + '</button>';
-         recapture_button = '<button class="daypass" onclick="recapture_data(' + elem.member_id + ')">ask for contact update</button>';
-         r += ('<li>' + recapture_button + free_pass_button + '<button onclick="daypass_change(this, ' + elem.member_id +
+         //recapture_button = '<button class="daypass" onclick="recapture_data(' + elem.member_id + ')">ask for contact update</button>';
+         //if (elem.covid_indemnity_signed)
+         covid_button = '';
+         var cap_name = elem.name;
+         if (!elem.covid_indemnity_signed) {
+            cap_name = '<span class="red">' + cap_name + " (NO COVID_INDEMNITY)</span>";
+            covid_button = "<button onclick='sign_covid_indemnity_from_visitors(" + i + ", " + elem.member_id + ", true)' " +
+             "class='daypass' type='button'>Sign COVID</button>";
+         } else {
+            covid_button = "<button onclick='sign_covid_indemnity_from_visitors(" + i + ", " + elem.member_id + ", false)' " +
+            "class='daypass' type='button'>Undo COVID</button>";
+         }
+         r += ('<li>' + covid_button + free_pass_button + '<button onclick="daypass_change(this, ' + elem.member_id +
                ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + 
-               elem.member_id + ')">' + elem.name + 
+               elem.member_id + ')">' + cap_name + 
                '</a>, email: ' + elem.email + ', phone: ' + elem.phone + ', emergency phone: ' + elem.emergency_phone + '</li>');
          j += 1;
       }
@@ -561,6 +597,9 @@ function update_entries()
          name = elem.name
       else
          name = "token: " + elem.token_id
+      if (!elem.covid_indemnity) {
+         name += " (NO COVID INDEMNITY!)"
+      }
       r = "<li><span class='" + cls + " circle'></span><span class='list-name'><a onclick='show_member_details_from_access_log(\"" + elem.member_id + "\")' href='#'>" + name
       r += "</a></span><span class='list-reason'>" + reason + "</span>" + parse_time(entry_time);
       r += "</span></li>"
@@ -568,9 +607,9 @@ function update_entries()
    }
 
    connection.session.call('com.members.list_entries').then(function(res){
-      var r = "";
-      for (var i in res) {
-         r += show_entry(res[i]);
+      var r = "Total number of people who entered in the last 2h: " + res['total'] + "<br/>";
+      for (var i in res['entries']) {
+         r += show_entry(res['entries'][i]);
       }
       $("#last_entrance_list").html(r);
    }, show_error);

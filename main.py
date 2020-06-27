@@ -19,7 +19,7 @@ from sqlalchemy import create_engine, select, outerjoin, and_
 from autobahn.twisted.util import sleep
 from autobahn.twisted.wamp import ApplicationSession
 from autobahn.wamp.exception import ApplicationError
-from authsys_common.model import meta, members, entries, tokens, vouchers
+from authsys_common.model import meta, members, entries, tokens, vouchers, covid_indemnity
 from authsys_common import queries as q
 from authsys_common.scripts import get_db_url, get_config
 
@@ -267,6 +267,14 @@ class AppSession(ApplicationSession):
     def invalidate_voucher(self, no):
         con.execute(vouchers.update().where(vouchers.c.unique_id == no).values(used = True))
 
+    def covid_indemnity_sign(self, member_id, sign):
+        if sign:
+            con.execute(covid_indemnity.insert({'timestamp': int(time.time()),
+                'member_id': member_id}))
+        else:
+            con.execute(covid_indemnity.delete().where(covid_indemnity.c.member_id == member_id))
+        return {'success': True}
+
     @inlineCallbacks
     def onJoin(self, details):
         # SUBSCRIBE to a topic and receive events
@@ -318,6 +326,7 @@ class AppSession(ApplicationSession):
         yield self.register(self.check_one_month, u'com.subscription.check_one_month')
         yield self.register(self.get_voucher, u'com.vouchers.get')
         yield self.register(self.invalidate_voucher, u'com.vouchers.invalidate')
+        yield self.register(self.covid_indemnity_sign, u'com.covid_indemnity.sign')
 
         #self.log.info("procedure add2() registered")
 
