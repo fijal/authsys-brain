@@ -498,17 +498,17 @@ function update_visitor_list(filter)
          free_pass_button = '<button class="daypass" onclick="member_visit_change(this, ' + elem.member_id + ')">' + free_pass_text + '</button>';
          //recapture_button = '<button class="daypass" onclick="recapture_data(' + elem.member_id + ')">ask for contact update</button>';
          //if (elem.covid_indemnity_signed)
-         covid_button = '';
+         //covid_button = '';
          var cap_name = elem.name;
-         if (!elem.covid_indemnity_signed) {
+         /*if (!elem.covid_indemnity_signed) {
             cap_name = '<span class="red">' + cap_name + " (NO COVID_INDEMNITY)</span>";
             covid_button = "<button onclick='sign_covid_indemnity_from_visitors(" + i + ", " + elem.member_id + ", true)' " +
              "class='daypass' type='button'>Sign COVID</button>";
          } else {
             covid_button = "<button onclick='sign_covid_indemnity_from_visitors(" + i + ", " + elem.member_id + ", false)' " +
             "class='daypass' type='button'>Undo COVID</button>";
-         }
-         r += ('<li>' + covid_button + free_pass_button + '<button onclick="daypass_change(this, ' + elem.member_id +
+         }*/
+         r += ('<li>' + free_pass_button + '<button onclick="daypass_change(this, ' + elem.member_id +
                ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + 
                elem.member_id + ')">' + cap_name + 
                '</a>, email: ' + elem.email + ', phone: ' + elem.phone + ', emergency phone: ' + elem.emergency_phone + '</li>');
@@ -597,9 +597,9 @@ function update_entries()
          name = elem.name
       else
          name = "token: " + elem.token_id
-      if (!elem.covid_indemnity) {
-         name += " (NO COVID INDEMNITY!)"
-      }
+      //if (!elem.covid_indemnity) {
+      //   name += " (NO COVID INDEMNITY!)"
+      //}
       r = "<li><span class='" + cls + " circle'></span><span class='list-name'><a onclick='show_member_details_from_access_log(\"" + elem.member_id + "\")' href='#'>" + name
       r += "</a></span><span class='list-reason'>" + reason + "</span>" + parse_time(entry_time);
       r += "</span></li>"
