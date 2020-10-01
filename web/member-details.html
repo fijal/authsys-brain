@@ -11,7 +11,7 @@
     {% else %}
        class="btn btn-secondary"
     {% endif %} onclick='change_membership({{ member_id }}, "none")'> No membership</button>
-    <button type='button' onclick='change_membership({{ member_id }}, "recurring")'
+    <button disabled type='button' onclick='change_membership({{ member_id }}, "recurring")'
     {% if member_type == "recurring" %}
        class="btn btn-primary"
     {% else %}
