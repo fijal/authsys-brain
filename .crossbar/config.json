@@ -11,7 +11,7 @@
                     "name": "authsys",
                     "roles": [
                         {
-                            "name": "anonymous",
+                            "name": "frontdesk",
                             "permissions": [
                                 {
                                     "uri": "",
@@ -21,6 +21,26 @@
                                         "register": true,
                                         "publish": true,
                                         "subscribe": true
+                                    },
+                                    "disclose": {
+                                        "caller": false,
+                                        "publisher": false
+                                    },
+                                    "cache": true
+                                }
+                            ]
+                        },
+                        {
+                            "name": "authenticator",
+                            "permissions": [
+                                {
+                                    "uri": "com.auth",
+                                    "match": "exact",
+                                    "allow": {
+                                        "call": false,
+                                        "register": true,
+                                        "publish": false,
+                                        "subscribe": false
                                     },
                                     "disclose": {
                                         "caller": false,
@@ -57,11 +77,24 @@
                             "classname": "main.VoucherManager"
                         },
                         "ws": {
+                            "auth": {
+                                "wampcra": {
+                                    "type": "dynamic",
+                                    "authenticator": "com.auth"
+                                }
+
+                            },
                             "type": "websocket"
                         }
                     }
                 }
-            ]
+            ],
+            "components": [{
+                "type": "class",
+                "classname": "authenticator.AuthSession",
+                "realm": "authsys",
+                "role": "authenticator"
+            }]
         },
         {
             "type": "container",

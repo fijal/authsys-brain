@@ -14,11 +14,23 @@ nunjucks.configure({'web': {'async': true}});
 
 // the WAMP connection to the Router
 //
+
+var secret;
+
 var connection = new autobahn.Connection({
    url: wsuri,
    realm: "authsys",
+   authmethods: ['wampcra'],
+   authid: 'frontdesk',
    max_retries: -1,
    max_retry_delay: 3,
+   onchallenge: function (session, method, extra) {
+      if (method === "wampcra") {
+        return autobahn.auth_cra.sign(secret, extra.challenge);
+      } else {
+         throw "don't know how to authenticate using '" + method + "'";
+      }
+   }
 });
 
 function Status()
@@ -701,6 +713,8 @@ function invalidate_voucher()
 connection.onopen = function (session, details) {
 
    $("#errorbar").html("");
+   $("#login-modal").modal("hide");
+   $("#login-modal-password").prop("value", "")
 
    function healthcheck(r) {
       last_healthcheck = r;
@@ -739,12 +753,21 @@ connection.onopen = function (session, details) {
 // fired when connection was lost (or could not be established)
 //
 connection.onclose = function (reason, details) {
-   console.log("Connection lost: " + reason);
+   $("#login-modal").modal("show");
+   var real_reason;
+   if (details.reason == "wamp.error.not_authorized") {
+      real_reason = "Authorization failure";
+   } else {
+      if (!details.reason)
+         real_reason = reason;
+      else
+         real_reason = details.reason;
+   }
+   $("#login-modal-context").text(real_reason);
    if (healthcheck_interval) {
       clearInterval(healthcheck_interval);
       healthcheck_interval = null;
    }
-   $("#errorbar").html("no connection!");
    //if (t1) {
    //   clearInterval(t1);
    //   t1 = null;
@@ -755,7 +778,26 @@ connection.onclose = function (reason, details) {
    //}
 }
 
+$(document).ready(function () {
+   $("#login-modal").modal({show: true, backdrop: "static"});
+});
+
+function clear_modal_context()
+{
+   $("#login-modal-context").text("");
+}
+
+function connect_to_autobahn()
+{
+   secret = $("#login-modal-password").prop("value");
+   if (!secret) {
+      $("#login-modal-context").text("Empty password");
+      return;
+   }
+   $("#login-modal-context").text("connecting....");
+   connection.open();
+}
 
 // now actually open the connection
 //
-connection.open();
+//connection.open();

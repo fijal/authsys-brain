@@ -17,6 +17,7 @@ from txrestapi import methods
 from sqlalchemy import create_engine, select, outerjoin, and_
 
 from autobahn.twisted.util import sleep
+from autobahn.wamp import auth
 from autobahn.twisted.wamp import ApplicationSession
 from autobahn.wamp.exception import ApplicationError
 from authsys_common.model import meta, members, entries, tokens, vouchers, covid_indemnity
@@ -274,6 +275,17 @@ class AppSession(ApplicationSession):
         else:
             con.execute(covid_indemnity.delete().where(covid_indemnity.c.member_id == member_id))
         return {'success': True}
+
+    def onConnect(self):
+        self.join(self.config.realm, [u"wampcra"], u"frontdesk")
+
+    def onChallenge(self, challenge):
+        if challenge.method != u'wampcra':
+            raise Exception("invalid auth method " + challenge.method)
+        if u'salt' in challenge.extra:
+            raise Exception("salt unimplemented")
+        return auth.compute_wcs(get_config().get('auth', 'secret'),
+                                challenge.extra['challenge'])
 
     @inlineCallbacks
     def onJoin(self, details):
