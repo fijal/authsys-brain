@@ -1,5 +1,13 @@
 var streaming = false;
 
+var width = 320; // We will scale the photo width to this
+var height = 0; // This will be computed based on the input stream
+
+var video = null;
+var canvas = null;
+var photo = null;
+var startbutton = null;
+
 function startup() {
     video = document.getElementById('video');
     canvas = document.getElementById('canvas');
