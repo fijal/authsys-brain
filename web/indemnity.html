@@ -1,0 +1,33 @@
+<html>
+<head>
+      <link href="bootstrap.min.css" rel="stylesheet"/>
+      <link href="bootstrap-datetimepicker.min.css" rel="stylesheet"/>
+      <link href="font-awesome.min.css" rel="stylesheet"/>
+      <link rel="stylesheet" type="text/css" href="styles.css" />
+      <script src="jquery-3.1.1.min.js"></script>
+      <script src="moment.min.js"></script>
+      <script src="nunjucks.min.js"></script>
+      <script src="popper.js"></script>
+      <script src="bootstrap.js"></script>
+      <script src="bootstrap-datetimepicker.min.js"></script>
+      <script src="indemnity.js"></script>
+    <script>
+    </script>
+</head>
+<body>
+    <div class="contentarea">
+    <h1>
+        Using Javascript to capture Photo
+    </h1>
+    <div class="camera">
+        <video id="video">Video stream not available.</video>
+    </div>
+    <div><button id="startbutton">Take photo</button></div>
+    
+    <canvas id="canvas"></canvas>
+    <div class="output">
+        <img id="photo" alt="The screen capture will appear in this box."> 
+    </div>
+    </div>
+</body>
+</html>
