@@ -58,7 +58,7 @@
                     "type": "web",
                     "endpoint": {
                         "type": "tcp",
-                        "port": 8080
+                        "port": 8087
                     },
                     "paths": {
                         "/": {
@@ -75,6 +75,10 @@
                         "voucher": {
                             "type": "resource",
                             "classname": "main.VoucherManager"
+                        },
+                        "signup": {
+                            "type": "resource",
+                            "classname": "signup.SignupManager"
                         },
                         "ws": {
                             "auth": {
@@ -113,7 +117,7 @@
                         "endpoint": {
                             "type": "tcp",
                             "host": "127.0.0.1",
-                            "port": 8080
+                            "port": 8087
                         },
                         "url": "ws://127.0.0.1:8080/ws"
                     }
