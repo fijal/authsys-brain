@@ -64,3 +64,5 @@ function takepicture() {
         clearphoto();
     }
 }
+
+window.addEventListener('load', startup, false);
