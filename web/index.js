@@ -525,9 +525,13 @@ function update_visitor_list(filter)
       _update_visitor_list(filter);
    } else {
       global_status.visitor_list_prefix = filter.slice(0, 3);
+      $("#member_add_list").html("Loading....");
       connection.session.call('com.forms.list', [filter.slice(0, 3)]).then(function (res) {
          global_status.visitor_list = res;
-         _update_visitor_list(filter);
+         if (!res)
+            $("#member_add_list").html("No results")
+         else
+            _update_visitor_list(filter);
       });
    }
 }
