@@ -92,8 +92,8 @@ class AppSession(ApplicationSession):
     def remove_subscription(self, no):
         return q.remove_subscription(con, no)
 
-    def list_indemnity_forms(self):
-        return q.list_indemnity_forms(con)
+    def list_indemnity_forms(self, query):
+        return q.list_indemnity_forms(con, query)
 
     def change_membership_type(self, no, tp):
         q.change_membership_type(con, no, tp)

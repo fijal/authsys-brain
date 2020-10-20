@@ -64,7 +64,7 @@ function find_in_string(filter, string)
 function update_member_list(filter)
 {
    if (filter.length < 3) {
-      $("#placeholder").html("Please type at least 3 letters");
+      $("#placeholder").html("Please type at least 3 letters (name, surname, email, phone)");
       return;
    }
 
@@ -517,6 +517,22 @@ function recapture_data(user_id)
 
 function update_visitor_list(filter)
 {
+   if (filter.length < 3) {
+      $("#member_add_list").html("Please enter at least 3 letters (name, surname, email, phone)");
+      return;
+   }
+   if (filter.slice(0, 3) == global_status.visitor_list_prefix) {
+      _update_visitor_list(filter);
+   } else {
+      global_status.visitor_list_prefix = filter.slice(0, 3);
+      connection.session.call('com.forms.list', [filter.slice(0, 3)]).then(function (res) {
+         global_status.visitor_list = res;
+         _update_visitor_list(filter);
+      });
+}
+
+function _update_visitor_list(filter)
+{
    var covid_button;
    var res = global_status.visitor_list;
    var r = "<div class='container'>";
@@ -564,15 +580,14 @@ function update_visitor_list(filter)
    $("#member_add_list").html(r);
 }
 
-function list_indemnity_forms()
+function initialize_visitor_list()
 {
-   connection.session.call('com.forms.list').then(function(res) {
-      $("#filter-visitor").show();
-      $("#filter-visitor-text")[0].value = "";
-      $("#filter-visitor-text").focus();
-      global_status.visitor_list = res;
-      update_visitor_list("");
-   }, show_error);
+   $("#filter-visitor").show();
+   $("#filter-visitor-text")[0].value = "";
+   $("#filter-visitor-text").focus();
+   global_status.visitor_list = [];
+   global_status.visitor_list_prefix = "";
+   update_visitor_list("");
 }
 
 function add_member_async()
