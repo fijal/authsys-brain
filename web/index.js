@@ -20,7 +20,7 @@ var secret;
 var connection = new autobahn.Connection({
    url: wsuri,
    realm: "authsys",
-   authmethods: ['wampcra'],
+   authmethods: ['cookie', 'wampcra'],
    authid: 'frontdesk',
    max_retries: -1,
    max_retry_delay: 3,
@@ -528,10 +528,7 @@ function update_visitor_list(filter)
       $("#member_add_list").html("Loading....");
       connection.session.call('com.forms.list', [filter.slice(0, 4)]).then(function (res) {
          global_status.visitor_list = res;
-         if (!res)
-            $("#member_add_list").html("No results")
-         else
-            _update_visitor_list(filter);
+         _update_visitor_list(filter);
       });
    }
 }
@@ -540,6 +537,10 @@ function _update_visitor_list(filter)
 {
    var covid_button;
    var res = global_status.visitor_list;
+   if (!res) {
+      $("#member_add_list").html("No results");
+      return;
+   }
    var r = "<div class='container'>";
    var j = 0;
    for (var i in res) {
@@ -804,7 +805,7 @@ connection.onopen = function (session, details) {
 // fired when connection was lost (or could not be established)
 //
 connection.onclose = function (reason, details) {
-   $("#login-modal").modal("show");
+   $("#login-modal").modal({show: true, backdrop: "static"});
    var real_reason;
    if (details.reason == "wamp.error.not_authorized") {
       real_reason = "Authorization failure";
@@ -830,7 +831,8 @@ connection.onclose = function (reason, details) {
 }
 
 $(document).ready(function () {
-   $("#login-modal").modal({show: true, backdrop: "static"});
+   // try to connection first using cookie
+   connection.open();
 });
 
 function clear_modal_context()

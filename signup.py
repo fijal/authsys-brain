@@ -29,9 +29,26 @@ class SignupManager(APIResource):
         #thread.start_new_thread(send_email, (request.args['email'],))
         return py.path.local(__file__).join('..', 'web', 'thankyou.html').read().replace("{{foo}}", request.args['filename'][0])
 
+    @methods.POST('^/signup/photo')
+    def upload_photo(self, request):
+        d = request.content.read()
+        print(d)
+        prefix = "data:image/png;base64,"
+        assert d.startswith(prefix)
+        store_dir = get_config().get('data', 'store_dir')
+        # invent new filename
+        XXXX
+        no = list(main.con.execute(select([func.count(members)])))[0][0]
+        fname = os.path.join(store_dir, "signature_%d.png" % int(no))
+        d = d[len(prefix):]
+        if (len(d) % 4) != 0:
+            d += "=" * (4 - (len(d) % 4))
+        with open(fname, "w") as f:
+            f.write(base64.b64decode(d, " /"))
+        return fname
+
     @methods.POST('^/signup/upload_signature')
     def upload_signature(self, request):
-        # pretty sure it's not how you do it....
         d = request.content.read()
         prefix = "data:image/png;base64,"
         assert d.startswith(prefix)

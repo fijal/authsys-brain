@@ -69,6 +69,7 @@ function takepicture() {
         context.drawImage(video, 0, 0, width, height);
 
         var data = canvas.toDataURL('image/png');
+        $.post("/signup/photo", data, function (res) { console.log(res); });
         photo.setAttribute('src', data);
     } else {
         clearphoto();

@@ -81,12 +81,18 @@
                             "classname": "signup.SignupManager"
                         },
                         "ws": {
+                            "cookie": {
+                                "store": {
+                                    "type": "file",
+                                    "filename": "bloc11authsys.dat"
+                                }
+                            },
                             "auth": {
                                 "wampcra": {
                                     "type": "dynamic",
                                     "authenticator": "com.auth"
-                                }
-
+                                },
+                                "cookie": {}
                             },
                             "type": "websocket"
                         }
