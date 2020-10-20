@@ -47,24 +47,36 @@ function Status()
 
 var global_status = new Status();
 
+function find_in_string(filter, string)
+{
+   if (string == null)
+      return false;
+   var lc = string.toLowerCase();
+   var found = true;
+   var allitems = filter.split(/ +/);
+   for (var item in allitems) {
+      if (lc.search(allitems[item]) == -1)
+         return false;
+   }
+   return true;
+}
+
 function update_member_list(filter)
 {
    var res = global_status.member_list;
-   var r = "<ul>"
+   var r = "<div class='container'>";
    for (var i in res) {
-      var lc = res[i][1].toLowerCase();
-      var found = true;
-      var allitems = filter.split(/ +/);
-      for (var item in allitems) {
-         if (lc.search(allitems[item]) == -1) {
-            found = false;
-            break;
-         }
+      found = find_in_string(filter, res[i].name) || find_in_string(filter, res[i].email) || find_in_string(filter, res[i].phone);
+      if (found) {
+         var phone = res[i].phone;
+         if (phone == null)
+            phone = "";
+         r += ("<a href='#' onclick='show_member_details(" + res[i].id + ")'><div class='row'><div class='col'>" + 
+               res[i].name + "</div><div class='col'>" + phone + "</div><div class='col'>" + res[i].email +
+               "</div></div></a>");
       }
-      if (found)
-         r += "<li><a href='#' onclick='show_member_details(" + res[i][0] + ")'>" + res[i][1] + "</a></li>";
    }
-   r += "</ul>"
+   r += '</div>'
    $("#placeholder").html(r);
 }
 
@@ -481,19 +493,11 @@ function update_visitor_list(filter)
 {
    var covid_button;
    var res = global_status.visitor_list;
-   var r = "<ul>";
+   var r = "<div class='container'>";
    var j = 0;
    for (var i in res) {
       var elem = res[i];
-      var name = elem.name.toLowerCase();
-      var found = true;
-      var allitems = filter.toLowerCase().split(/ +/);
-      for (var item in allitems) {
-         if (name.search(allitems[item]) == -1) {
-            found = false;
-            break;
-         }
-      }
+      var found = find_in_string(filter, elem.name) || find_in_string(filter, elem.phone) || find_in_string(filter, elem.email);
       if (found) {
          var ts = new Date(elem.timestamp * 1000);
          var text, free_pass_button, free_pass_text, recapture_button;
@@ -520,16 +524,17 @@ function update_visitor_list(filter)
             covid_button = "<button onclick='sign_covid_indemnity_from_visitors(" + i + ", " + elem.member_id + ", false)' " +
             "class='daypass' type='button'>Undo COVID</button>";
          }*/
-         r += ('<li>' + free_pass_button + '<button onclick="daypass_change(this, ' + elem.member_id +
+         r += ("<div class='row'><div class='col-3'>" + free_pass_button + '<button onclick="daypass_change(this, ' + elem.member_id +
                ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + 
-               elem.member_id + ')">' + cap_name + 
-               '</a>, email: ' + elem.email + ', phone: ' + elem.phone + ', emergency phone: ' + elem.emergency_phone + '</li>');
+               elem.member_id + ')"></div><div class="col">' + cap_name +
+               '</div><div class="col">' + elem.email + '</div><div class="col">' + elem.phone +
+               '</div><div class="col">emergency:' + elem.emergency_phone + '</div></div>');
          j += 1;
       }
       if (j > 30)
          break;
    }
-   r += "</ul>"
+   r += "</div>"
    $("#member_add_list").html(r);
 }
 
