@@ -517,16 +517,16 @@ function recapture_data(user_id)
 
 function update_visitor_list(filter)
 {
-   if (filter.length < 3) {
-      $("#member_add_list").html("Please enter at least 3 letters (name, surname, email, phone)");
+   if (filter.length < 4) {
+      $("#member_add_list").html("Please enter at least 4 letters (name, surname, email, phone)");
       return;
    }
-   if (filter.slice(0, 3) == global_status.visitor_list_prefix) {
+   if (filter.slice(0, 4) == global_status.visitor_list_prefix) {
       _update_visitor_list(filter);
    } else {
-      global_status.visitor_list_prefix = filter.slice(0, 3);
+      global_status.visitor_list_prefix = filter.slice(0, 4);
       $("#member_add_list").html("Loading....");
-      connection.session.call('com.forms.list', [filter.slice(0, 3)]).then(function (res) {
+      connection.session.call('com.forms.list', [filter.slice(0, 4)]).then(function (res) {
          global_status.visitor_list = res;
          if (!res)
             $("#member_add_list").html("No results")
