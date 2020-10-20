@@ -529,6 +529,7 @@ function update_visitor_list(filter)
          global_status.visitor_list = res;
          _update_visitor_list(filter);
       });
+   }
 }
 
 function _update_visitor_list(filter)
