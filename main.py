@@ -71,8 +71,8 @@ class AppSession(ApplicationSession):
 
     log = Logger()
 
-    def list_members(self):
-        return q.get_member_list(con)
+    def list_members(self, query):
+        return q.get_member_list(con, query)
 
     def get_member_data(self, no):
         return q.get_member_data(con, no)

@@ -63,34 +63,49 @@ function find_in_string(filter, string)
 
 function update_member_list(filter)
 {
-   var res = global_status.member_list;
-   var r = "<div class='container'>";
-   for (var i in res) {
-      found = find_in_string(filter, res[i].name) || find_in_string(filter, res[i].email) || find_in_string(filter, res[i].phone);
-      if (found) {
-         var phone = res[i].phone;
-         if (phone == null)
-            phone = "";
-         r += ("<a href='#' onclick='show_member_details(" + res[i].id + ")'><div class='row'><div class='col'>" + 
-               res[i].name + "</div><div class='col'>" + phone + "</div><div class='col'>" + res[i].email +
-               "</div></div></a>");
+   function continuation(r)
+   {
+      global_status.member_list = r;
+
+      var r = "<div class='container'>";
+      for (var i in res) {
+         found = find_in_string(filter, res[i].name) || find_in_string(filter, res[i].email) || find_in_string(filter, res[i].phone);
+         if (found) {
+            var phone = res[i].phone;
+            if (phone == null)
+               phone = "";
+            r += ("<a href='#' onclick='show_member_details(" + res[i].id + ")'><div class='row'><div class='col'>" + 
+                  res[i].name + "</div><div class='col'>" + phone + "</div><div class='col'>" + res[i].email +
+                  "</div></div></a>");
+         }
       }
+      r += '</div>'
+      $("#placeholder").html(r);
    }
-   r += '</div>'
-   $("#placeholder").html(r);
+   var res = global_status.member_list;
+   var cur_prefix = global_status.member_list_prefix;
+   if (filter.search(cur_prefix) == 0) {
+      continuation(global_status.member_list);
+   } else {
+      connection.session.call('com.members.list', [filter.slice(0, 3)]).then(function (res) {
+         global_status.member_list_prefix = filter.slice(0, 3);
+         continuation(res);
+      });
+   }
 }
 
-function list_members_async()
+function initialize_member_list()
 {
-   connection.session.call('com.members.list').then(function(res) {
-      $("#filter-member").show();
-      $("#filter-text")[0].value = "";
-      global_status.member_list = res;
-      $("#filter-text").focus();
-      update_member_list("");
-   }, function(res) {
-      $("#placeholder").text(res);
-   });
+//   connection.session.call('com.members.list', [""]).then(function(res) {
+   $("#filter-member").show();
+   $("#filter-text")[0].value = "";
+   global_status.member_list = []; //res;
+   global_status.member_list_prefix = null;
+   $("#filter-text").focus();
+   update_member_list("");
+//   }, function(res) {
+//      $("#placeholder").text(res);
+//   });
 }
 
 function authorize_credit_card(no)
