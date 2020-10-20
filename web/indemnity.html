@@ -1,33 +1,197 @@
 <html>
 <head>
-      <link href="bootstrap.min.css" rel="stylesheet"/>
-      <link href="bootstrap-datetimepicker.min.css" rel="stylesheet"/>
-      <link href="font-awesome.min.css" rel="stylesheet"/>
-      <link rel="stylesheet" type="text/css" href="styles.css" />
-      <script src="jquery-3.1.1.min.js"></script>
-      <script src="moment.min.js"></script>
-      <script src="nunjucks.min.js"></script>
-      <script src="popper.js"></script>
-      <script src="bootstrap.js"></script>
-      <script src="bootstrap-datetimepicker.min.js"></script>
-      <script src="indemnity.js"></script>
-    <script>
-    </script>
+    <link rel="stylesheet" href="/indemnity.css"/>
+    <script src="/signature_pad.min.js"></script>
+    <script src="/autobahn.min.js"></script>
+    <script src="/jquery-3.1.1.min.js"></script>
+    <script src="/indemnity.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 </head>
 <body>
-    <div class="contentarea">
-    <h1>
-        Using Javascript to capture Photo
-    </h1>
-    <div class="camera">
-        <video id="video">Video stream not available.</video>
+  <header class="main">
+    <div class="brand">
+      <i class="icon-logo"></i>
     </div>
-    <div><button id="startbutton">Take photo</button></div>
-    
-    <canvas id="canvas"></canvas>
-    <div class="output">
-        <img id="photo" alt="The screen capture will appear in this box."> 
+  </header>
+  <div id="main">
+    <h1>DISCLAIMER AGREEMENT</h1>
+    <div class="info center top-space">
+      <p>
+        Between Gravity One Climbing and Fitness (PTY), hereafter referred to as
+      </p>
+      <h2>Bloc11</h2>
+      <p>
+        And The Climber, or any person entering Bloc11, hereafter referred to as
+      </p>
+      <h2>Climber</h2>
     </div>
+    <div class="info">
+      <p>
+          Bloc11 and the Climber have entered into an agreement in terms whereof
+          Bloc11 has allowed the Climber to make use of its facilities on the terms and
+          conditions below.
+      </p>
+      <p>
+          The Climber understands that participation in, or observing of the sport of rock
+          climbing and the use of Bloc11’s indoor climbing wall includes certain dangers and risks:
+      </p>
+      <ul>
+          <li>Injury sustained in a fall and hitting the wall, projections (permanent or
+              temporary in place) the floor (including any object or objects resting on the floor).
+          </li>
+          <li>Injury due to falling climbers or objects.</li>
+          <li>Cuts and abrasions resulting from bodily contact with the climbing wall.</li>
+      </ul>
+      <p>
+        The Climber further acknowledges that this list is not inclusive of all possible risks and dangers associated with the use of the indoor climbing facility.
+      </p>
+      <p>
+        The ability of the Climber to climb at Bloc11 gives no indication of his/her ability to climb on natural rock in the outdoor environment.
+      </p>
     </div>
+
+    <div class="info">
+      <h2 class="top-space">THEREFORE IT IS AGREED UPON AS FOLLOWS:</h2>
+      <h3>WAIVER</h3>
+      <p>
+        The Climber acknowledges that the activity in which he/she participates in by
+        its very nature dangerous and carries inherent risks. Best effort done on the part
+        of Bloc 11 staff and owners cannot completely reduce the possibility of such risks.
+        These risks could cause him/her to
+        sustain bodily injury or death and/or suffer damages and the Climber waives any
+        claim however arising against Bloc11 or its members, employees, the body corporate of Island
+        Park or any third party.
+      </p>
+      <h3>DISCLAIMER</h3>
+      <p>
+        The Climber makes use of Bloc11's facilities at entirely his/her own risk.
+        The Climber agrees that Bloc11 will not be held liable and/or responsible for any loss,
+        injury, damages, death, and/or compensation of whatsoever nature and howsoever arising as a result thereof.
+      </p>
+      <p>
+        We will not be responsible for, and shall not pay for, any loss, damage or theft of items left unattended.
+      </p>
+      <h3>MEDICAL FITNESS</h3>
+      <p>
+        The Climber hereby warrants that he/she is medically fit so as to participate in activities of this nature,
+        it not being the responsibility of Bloc11 to have the Climber undergo any medical examination,
+        the onus being on the Climber to do so. Bloc11 shall not be obliged to call upon the Climber to
+        provide a medical certificate. Bloc11, its members or employees, shall not be liable for any claim or
+        injury or loss, damage or even death arising from or in connection with the use of the facility.
+      </p>
+      <h3>COVID-19</h3>
+      <p>
+        Bloc 11 has put in place preventative measures to reduce the spread of COVID-19 but is unable to guarantee that you (or your children) will not contract the virus while taking part in activities on the premises.  
+
+        By signing this waiver, the athlete participating in climbing at Bloc 11 (or a parent/guardian on behalf of a minor climbing at Bloc 11) certifies that, he or she is aware that a climbing facility, despite all the precautions being taken, is a potentially risky environment and can result in contraction of the virus. The right of admission is reserved. He or she can be denied entry if presenting non-specific symptoms of COVID-19, regardless of their membership status
+      </p>
+    </div>
+    <div>
+      <h2 class="top-space">Participant's details</h2>
+      <form action="/signup/submit" method="post">
+        <div class="section">
+          <div class="input" id="name-input" name="name-input">
+            <label for="name">First Name(s):</label>
+            <input id="name" name="name" type="text"/>
+            <div class="error">Please provide your first name.</div>
+          </div>
+          <div class="input" id="surname-input" name="surname-input">
+            <label for="surname">Surname:</label>
+            <input id="surname" name="surname" type="text"/>
+            <div class="error">Please provide your surname.</div>
+          </div>
+          <div class="input" id="id-input" name="id-input">
+            <label for="id_no">ID/Passport Number:</label>
+            <input id="id_no" name="id_no"/>
+            <div class="error">Please provide your South African ID number or passport number (or date of birth in case you don't know).</div>
+          </div>
+        </div>
+
+        <div class="section top-space">
+          <h3>Contact details</h3>
+          Email provided here will be used to send the basic information about safety procedures
+          at bloc 11 and in case of future problems of credit card processing.
+          Unless checked below it won't be used for anything else other than changes
+          to terms and conditions. We'll only ever call you or send you sms in a case of emergency
+          or problems with your credit card processing.
+
+          <div class="input" id="email-input" name="email-input">
+            <label for="email">Email: </label>
+            <input id="email" name="email" type="text"/>
+            <div class="error">Please provide your email address.</div>
+          </div>
+          <div class="input" id="email-consent">
+            <label for="consent">Please send me occasional newsletter</label>
+            <input name="spam" type="checkbox"/>
+          </div>
+          <div class="input" id="phone-input" name="phone-input">
+            <label for="phone">Phone: </label>
+            <input id="phone" name="phone" type="text"/>
+            <div class="error">Please provide your telephone number</div>
+          </div>
+
+        </div>
+        <div class="section top-space-small">
+        <h3>In order to improve our understanding of our dear customers, please
+        select where did you hear about us (optional)</h3>
+        <select name="reason">
+          <option value="unspecified">Unspecified</option>
+          <option value="friends">Friends</option>
+          <option value="social-media">Social media</option>
+          <option value="fliers">Fliers</option>
+          <option value="internet-search">Internet search</option>
+          <option value="drive-by">Just drove by</option>
+          <option value="other">Other</option>
+        </select>
+        </div>
+
+        <div class="section top-space-small">
+          <h3>Emergency Contact</h3>
+
+          <div class="input" id="emergency-phone-input" name="emergency-phone-input">
+            <label for="email">Phone Number: </label>
+            <input id="emergency-phone" name="emergency-phone" type="phone"/>
+            <div class="error">Please provide your emergency contact's phone number.</div>
+          </div>
+        </div>
+
+        <h3>Electronic Signature Consent</h3>
+        <p>
+          By checking here, you are consenting to the use of your electronic signature in lieu
+          of an original signature on paper. You have the right to request that you sign a paper
+          copy instead. By checking here, you are waiving that right. After consent, you may,
+          upon written request to us, obtain a paper copy of an electronic record.
+          No fee will be charged for such copy and no special hardware or software is required
+          to view it. Your agreement to use an electronic signature with us for any documents
+          will continue until such time as you notify us in writing that you no longer wish to
+          use an electronic signature. There is no penalty for withdrawing your consent. You
+          should always make sure that we have a current email address in order to contact you
+          regarding any changes, if necessary.
+        </p>
+
+        <h3 class="top-space-small">Electronic Signature</h3>
+
+        <div id="signature-pad" class="m-signature-pad">
+          <div class="m-signature-pad--body">
+          <canvas></canvas>
+        </div>
+
+        <div class="m-signature-pad--footer" id="signature-input" name="signature-input">
+          <div class="description">Sign above</div>
+            <button type="button" class="button clear" data-action="clear">Clear</button>
+          </div>
+        </div>
+
+        <input type="hidden" id="input-filename" name="filename"/>
+
+        <span id="progress"></span>
+        <div id="error"></div>
+
+        <h3 class="top-space-small"></h3>
+
+        <input id="submit-button" onclick="return save_signature();" type="submit" value="Submit Waiver"/>
+      </form>
+    </div>
+  </div>
 </body>
 </html>
