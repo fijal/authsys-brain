@@ -94,8 +94,15 @@ function update_member_list(filter)
    } else {
       $("#placeholder").html("Loading....");
       connection.session.call('com.members.list', [filter.slice(0, 3)]).then(function (res) {
+         console.log(filter.slice(0, 3));
+         console.log(res);
          global_status.member_list_prefix = filter.slice(0, 3);
-         continuation(res);
+         if (!res) {
+            global_status.member_list = [];
+            $("#placeholder").html("No hits");
+         } else {
+            continuation(res);
+         }
       });
    }
 }
