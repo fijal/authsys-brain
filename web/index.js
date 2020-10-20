@@ -63,6 +63,11 @@ function find_in_string(filter, string)
 
 function update_member_list(filter)
 {
+   if (filter.length < 3) {
+      $("#placeholder").html("Please type at least 3 letters");
+      return;
+   }
+
    function continuation(r)
    {
       global_status.member_list = r;
@@ -87,6 +92,7 @@ function update_member_list(filter)
    if (filter.search(cur_prefix) == 0) {
       continuation(global_status.member_list);
    } else {
+      $("#placeholder").html("Loading....");
       connection.session.call('com.members.list', [filter.slice(0, 3)]).then(function (res) {
          global_status.member_list_prefix = filter.slice(0, 3);
          continuation(res);
