@@ -68,7 +68,7 @@ function update_member_list(filter)
       return;
    }
 
-   function continuation(r)
+   function continuation(res)
    {
       global_status.member_list = r;
 
