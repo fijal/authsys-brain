@@ -70,7 +70,7 @@ function update_member_list(filter)
 
    function continuation(res)
    {
-      global_status.member_list = r;
+      global_status.member_list = res;
 
       var r = "<div class='container'>";
       for (var i in res) {
