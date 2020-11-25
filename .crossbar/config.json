@@ -49,6 +49,20 @@
                                     "cache": true
                                 }
                             ]
+                        },
+                        {
+                            "name": "notifier",
+                            "permissions": [
+                                {
+                                    "uri": "com.notify",
+                                    "match": "exact",
+                                    "allow": {
+                                        "call": true,
+                                        "register": false,
+                                        "publish": false,
+                                        "subscribe": false
+                                    }
+                                }]
                         }
                     ]
                 }
@@ -75,6 +89,11 @@
                         "voucher": {
                             "type": "resource",
                             "classname": "main.VoucherManager"
+                        },
+                        "notify": {
+                            "type": "caller",
+                            "realm": "authsys",
+                            "role": "notifier"
                         },
                         "signup": {
                             "type": "resource",

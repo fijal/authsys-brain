@@ -1,0 +1,111 @@
+<html>
+<head>
+    <link rel="stylesheet" href="/indemnity.css"/>
+    <script src="/signature_pad.min.js"></script>
+    <script src="/autobahn.min.js"></script>
+    <script src="/jquery-3.1.1.min.js"></script>
+    <script src="/moment.min.js"></script>
+    <script src="/bank_details.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+</head>
+<body>
+    <header class="main">
+        <div class="brand">
+        <i class="icon-logo"></i>
+    </div>
+    </header>
+    <div id="main">
+        <h1>Bank details</h1>
+        <p>
+            <div>
+                You are about to enter bank details for debit order directed
+                at Gravity One climbing and fitness, trading under name Bloc 11.
+                You will have a chance to review the exact wording on printed paper.
+            </div>
+            <div>
+                You will be charged <b>R</b><b id="price"></b> every month, starting <b id="next-monday"></b>
+                for  <b id="subscription-type"></b> subscription
+            </div>
+        </p>
+        <div class="info">
+            <form action="/signup/submit_bank_details" method="post">
+                <div class="section">
+                    <div class="input" id="name-input" name="name-input">
+                        <label for="name">Name and surname:</label>
+                        <input id="name" name="name" type="text"/>
+                        <div class="error">Please provide your name</div>
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="input" id="contact-number-input" name="contact-number-input">
+                        <label for="contact-number">Contact number:</label>
+                        <input id="contact-number" name="contact-number" type="text"/>
+                        <div class="error">Please provide a valid contact number</div>
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="input" id="address-input" name="address-input">
+                        <label for="address">Address:</label>
+                        <input id="address" name="address" type="text"/>
+                        <div class="error">Please provide a valid address</div>
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="input" id="bank-input" name="bank-input">
+                        <label for="bank">Your bank:</label>
+                        <select id="bank" name="bank">
+                            <option selected value="">----- please select -------</option>
+                            <option value="first national bank (south africa)">First National Bank (South Africa)</option>
+                            <option value="absa bank">Absa Bank</option>
+                            <option value="standard bank (south africa)">Standard Bank (South Africa)</option>
+                            <option value="nedbank (south africa)">Nedbank (South Africa)</option>
+                            <option value="capitec bank">Capitec Bank</option>
+                            <option value="investec bank">Investec Bank</option>
+                            <option value="bank of namibia">Bank Of Namibia</option>
+                            <option value="albaraka bank">Albaraka Bank</option>
+                            <option value="unibank">Unibank</option>
+                            <option value="first national bank swaziland">First National Bank Swaziland</option>
+                            <option value="first national bank namibia">First National Bank Namibia</option>
+                            <option value="first national bank lesotho">First National Bank Lesotho</option>
+                            <option value="mtn banking">Mtn Banking</option>
+                            <option value="bidvest bank">Bidvest Bank</option>
+                            <option value="finbond mutual bank">Finbond Mutual Bank</option>
+                            <option value="ubank">Ubank</option>
+                            <option value="jp morgan chase bank">Jp Morgan Chase Bank</option>
+                            <option value="postbank">Postbank</option>
+                            <option value="state bank of india">State Bank Of India</option>
+                            <option value="central bank of lesotho">Central Bank Of Lesotho</option>
+                            <option value="african bank">African Bank</option>
+                            <option value="standard bank namibia">Standard Bank Namibia</option>
+                            <option value="citi bank">Citi Bank</option>
+                            <option value="merchantile bank">Merchantile Bank</option>
+                            <option value="nedbank corporate saver account">Nedbank Corporate Saver Account</option>
+                            <option value="meeg bank">Meeg Bank</option>
+                            <option value="grinrod bank">Grinrod Bank</option>
+                            <option value="vbs mutual bank">Vbs Mutual Bank</option>
+                            <option value="hsbc bank">Hsbc Bank</option>
+                        </select>
+                        <div class="error">Please select a bank</div>
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="input" id="bank-account-input" name="bank-account-input">
+                        <label for="bank-account">Bank account number:</label>
+                        <input id="bank-account" name="bank-account" type="text"/>
+                        <div class="error">Please provide a valid bank account number</div>
+                    </div>
+                </div>
+                <span id="progress"></span>
+                <div id="error"></div>
+
+                <input type="hidden" id="member_id" name="member_id"/>
+                <input type="hidden" id="price-value" name="price"/>
+
+                <h3 class="top-space-small"></h3>
+
+                <input id="submit-button" onclick="return save_bank_data();" type="submit" value="Submit Bank Data"/>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

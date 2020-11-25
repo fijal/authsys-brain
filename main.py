@@ -20,7 +20,7 @@ from autobahn.twisted.util import sleep
 from autobahn.wamp import auth
 from autobahn.twisted.wamp import ApplicationSession
 from autobahn.wamp.exception import ApplicationError
-from authsys_common.model import meta, members, entries, tokens, vouchers, covid_indemnity
+from authsys_common.model import meta, members, entries, tokens, vouchers, covid_indemnity, transactions
 from authsys_common import queries as q
 from authsys_common.scripts import get_db_url, get_config
 
@@ -109,7 +109,10 @@ class AppSession(ApplicationSession):
             valid=True, timestamp=int(time.time())))
 
     def register_token(self, token_id):
-        con.execute(entries.insert().values(timestamp=int(time.time()), token_id=token_id))
+        conf = get_config()
+        gym_id = conf.get('gym', 'id')
+        con.execute(entries.insert().values(timestamp=int(time.time()), token_id=token_id,
+                                            gym_id=gym_id))
         self.publish(u'com.members.entry')
         return q.is_valid_token(con, token_id, int(time.time()))
 
@@ -133,98 +136,17 @@ class AppSession(ApplicationSession):
     def league_register(self, no):
         q.league_register(con, no)
 
-    @inlineCallbacks
     def notify_transaction(self, no, tp):
-        yield self.payment_gateway_request(no, tp)
-
-    @inlineCallbacks
-    def payment_gateway_continue(self, res, no, tp, price, memb_type):
-        r = yield res.json()
-        print(r)
-        q.payments_write_transaction(con, no, "initial", time.time(), r['id'],
-            r['result']['code'], r['result']['description'], price, memb_type)
-        self.publish(u'com.payments.notify_broadcast', no, price)
-        self.publish(u'com.payments.update_history', no)
-
-    def payment_gateway_request(self, no, tp):
-        conf = get_config()
-        price = conf.get("price", tp)
-        url = conf.get('payment', 'base') + '/v1/checkouts'
-        name, email = q.get_customer_name_email(con, no)
-        # invent
-        names = name.split(" ")
-        if len(names) == 1:
-            lastname = ""
-            firstname = names[0]
-        else:
-            lastname = names[-1]
-            firstname = " ".join(names[:-1])
-        data = {
-            'authentication.userId' : conf.get('payment', 'userId'),
-            'authentication.password' : conf.get('payment', 'password'),
-            'authentication.entityId' : conf.get('payment', 'entityId'),
-            'amount' : price,
-            'currency' : 'ZAR',
-            'paymentType' : 'DB',
-            'recurringType': 'INITIAL',
-            'createRegistration': 'true',
-            'customer.givenName': firstname,
-            'customer.surname': lastname,
-            'customer.email': email,
-            'merchantTransactionId': "foobarbaz" + str(q.max_id_of_payment_history(con)),
-            }
-        d = treq.post(url, data)
-        d.addCallback(self.payment_gateway_continue, no, tp, price, tp)
-        return True
-
-    @inlineCallbacks
-    def payment_check_status(self, path):
-        conf = get_config()
-        d = dict([x.split("=") for x in path.split("&")])
-        token_id = urllib.unquote(d['id'])
-        url = conf.get('payment', 'base') + urllib.unquote(d['resourcePath'])
-        params = "&".join(["%s=%s" % (k, v) for (k, v) in [
-         ('authentication.userId', conf.get('payment', 'userId')),
-         ('authentication.password', conf.get('payment', 'password')),
-         ('authentication.entityId', conf.get('payment', 'entityId')),
-        ]])
-        print(url + "?" + params)
-        r = yield treq.get(url + "?" + params)
-        r = yield r.text()
-        print(r)
-        r = json.loads(r)
-        member_id, sum, tp = q.payments_get_id_sum_tp(con, token_id)
-        q.payments_write_transaction(con, member_id, "completed", time.time(),
-            r['registrationId'], r['result']['code'], r['result']['description'], sum, tp)
-        if re.search("^(000\.000\.|000\.100\.1|000\.[36])", r['result']['code']):
-            q.add_one_month_subscription(con, member_id, tp, t0=time.time())
-            q.record_credit_card_token(con, member_id, r['registrationId'])
-            returnValue((True, conf.get("url", "auth")))
-        self.publish(u'com.payments.update_history', member_id)
-        returnValue((False, conf.get("url", "auth")))
+        import signup
+        signup.current_request_data.notify(no, tp)
 
     def get_payment_history(self, no):
         memb_data = q.get_member_data(con, no)
-        # XXX add keys
-        credit_card_token = memb_data['credit_card_token']
         member_type = memb_data['member_type']
         subscr_end_timestamp = memb_data['subscription_ends']
         return {'payment_history': q.get_payment_history(con, no),
-                'credit_card_token': credit_card_token,
                 'subscription_ends': subscr_end_timestamp,
                 'member_type': member_type}
-
-    @inlineCallbacks
-    def get_payment_form(self, path):
-        print("PAYMENT_FORM", path)
-        d = dict([x.split("=") for x in path.split("&")])
-        no = d['id']
-        id = q.get_last_payment_id(con, no)
-        conf = get_config()
-        url = conf.get('payment', 'base') + "/v1/paymentWidgets.js?checkoutId=" + id
-        r = yield treq.get(url)
-        r = yield r.text("utf-8")
-        returnValue(str(r))
 
     def update_data(self, user_id):
         self.publish(u'com.members.update_data_broadcast', [user_id])
@@ -276,6 +198,17 @@ class AppSession(ApplicationSession):
             con.execute(covid_indemnity.delete().where(covid_indemnity.c.member_id == member_id))
         return {'success': True}
 
+    def transaction_start(self, no):
+        con.execute(transactions.insert().values({
+            'member_id': no,
+            'timestamp': int(time.time()),
+            'price': 0,
+            'type': "capture",
+            'description': "Capture bank data",
+            'outcome': 'pending'
+        }))
+        return {'success': True}
+
     def onConnect(self):
         self.join(self.config.realm, [u"wampcra"], u"frontdesk")
 
@@ -286,6 +219,9 @@ class AppSession(ApplicationSession):
             raise Exception("salt unimplemented")
         return auth.compute_wcs(get_config().get('auth', 'secret'),
                                 challenge.extra['challenge'])
+
+    def notify(self):
+        self.publish(u'com.transaction.notify')
 
     @inlineCallbacks
     def onJoin(self, details):
@@ -323,8 +259,6 @@ class AppSession(ApplicationSession):
         yield self.register(self.add_one_month_from_now, u'com.subscription.add_one_month_from_now')
         yield self.register(self.remove_subscription, u'com.subscription.remove')
         yield self.register(self.subscription_change_end, u'com.subscription.change_expiry_date')
-        yield self.register(self.get_payment_form, u'com.payments.get_form')
-        yield self.register(self.payment_check_status, u'com.payments.check_status')
         yield self.register(self.change_membership_type, u'com.members.change_membership_type')
         yield self.register(self.change_subscription_type, u'com.members.change_subscription_type')
         yield self.register(self.notify_transaction, u'com.payments.notify_transaction')
@@ -339,6 +273,8 @@ class AppSession(ApplicationSession):
         yield self.register(self.get_voucher, u'com.vouchers.get')
         yield self.register(self.invalidate_voucher, u'com.vouchers.invalidate')
         yield self.register(self.covid_indemnity_sign, u'com.covid_indemnity.sign')
+        yield self.register(self.transaction_start, u'com.transaction.start')
+        yield self.register(self.notify, u'com.notify')
 
         #self.log.info("procedure add2() registered")
 

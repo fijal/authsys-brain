@@ -126,13 +126,6 @@ function authorize_credit_card(no)
    }, show_error);
 }
 
-function add_membership(type, no)
-{
-   connection.session.call('com.subscription.add_till', [type, no, $("#year-change")[0].value,
-      $("#month-change")[0].value, $("#day-change")[0].value]).then(
-      function (res) { show_member_details(no) }, show_error);
-}
-
 function remove_membership(no)
 {
    connection.session.call('com.subscription.remove', [no]).then(
@@ -141,14 +134,20 @@ function remove_membership(no)
 
 function add_one_month(no, tp)
 {
+   $("#add-one-month-button").attr("disabled", true);
    connection.session.call('com.subscription.add_one_month', [no, tp]).then(
-      function(res) { show_member_details(no) }, show_error);
+      function(res) {
+         $("#add-one-month-button").attr("disabled", false);
+         show_member_details(no)
+      }, show_error);
 }
 
 function add_one_month_from_now(no, tp)
 {
+   $("#add-one-month-from-now-button").attr("disabled", true);
    connection.session.call('com.subscription.check_one_month', [no]).then(
       function(res) {
+         $("#add-one-month-from-now-button").attr("disabled", false);
          global_status.member_id = no;
          global_status.member_type = tp;
          if (res) {
@@ -209,33 +208,44 @@ function addMonths (date, count) {
 function refresh_transaction_history(no)
 {
    connection.session.call('com.payments.get_history', [no]).then(function (res) {
+      console.log(res);
       if (!$("#list-of-operations")[0])
          return;
-      r = "<table class='res-table'><tr><td>Time:</td><td>Type:</td><td>Outcome:</td><td>Value:</td></tr>";
+      var r = "<table class='res-table'><tr><td>Time:</td><td>Type:</td><td>Outcome:</td><td>Value:</td></tr>";
       var k = res.payment_history;
       for (var i in k)
       {
          var elem = k[i];
-         r += "<tr><td>" + (moment(new Date(elem[2] * 1000)).format("HH:mm DD MMMM YYYY")) + "</td>" +
-         "<td>" + elem[3] + "</td>" +
-         "<td>" + elem[5] + "</td>" +
-         "<td>R" + elem[6] + "</td>";
+         r += "<tr><td>" + (moment(new Date(elem.timestamp * 1000)).format("HH:mm DD MMMM YYYY")) + "</td>" +
+         "<td>" + elem.type + "</td>" +
+         "<td>" + elem.description + "</td>" +
+         "<td>" + elem.outcome + "</td>";
+         if (elem.price != 0 && elem != null) {
+            r += "<td>R" + elem.price + "</td>";
+         }
+         r += "</tr>";
       }
       r += "</table>";
       $("#list-of-operations").html(r);
-      if (res.credit_card_token) {
-         $("#cc-info").html("Credit card known");
+/*      if (res.credit_card_token) {
+         $("#cc-info").html("Bank details known.");
       } else {
-         $("#cc-info").html("no credit card on file");
-      }
+         $("#cc-info").html("No bank details on file.");
+      }*/
    });
 }
 
-function initiate_ipad_transaction(no, tp)
+function initiate_ipad_transaction(member_id, name, phone, sub_type, price, next_monday)
 {
-   connection.session.call("com.payments.notify_transaction" , [no, tp]).then(function (res) {
-      refresh_transaction_history(no);
-   }, show_error);
+   $("#initiate-payment-button").attr("disabled", true);
+   connection.session.call("com.transaction.start", [member_id]);
+   $.post('/signup/notify', {'member_id': member_id, 'name': name,
+                             'contact_number': phone, 'subscription_type': sub_type, 'price': price,
+                             'next_monday': next_monday},
+      function(res) {
+          refresh_transaction_history(member_id);
+          $("#initiate-payment-button").attr("disabled", false);
+   });
 }
 
 function pause_membership(no)
@@ -312,6 +322,11 @@ function show_member_details(no, extra_callback)
       if (res.last_subscr_ended)
          res.last_subscr_ended = moment(new Date(res.last_subscr_ended * 1000)).format("DD MMMM YYYY");
       res.prices = global_status.prices;
+      if (res.account_number) {
+         res['disableifnobankdetails'] = '';
+      } else {
+         res['disableifnobankdetails'] = 'disabled';
+      }
       nunjucks.render('member-details.html', res, function(err, html) {
          $("#placeholder").html(html);
          var elem = $("#" + res.subscription_type);
@@ -347,71 +362,6 @@ function show_member_details(no, extra_callback)
          if (extra_callback) {
             extra_callback(res);
          }
-      /*var memb_info = "", subscription, cancel_button = "";
-      var cls = "";
-      var but1 = "", but2 = "", but3 = "", but4 = "";
-      if (res.member_type == null) {
-         but1 = "selected";
-         memb_info = "<div class='member-item-info'>No current membership</div>";
-      } else if (res.member_type == "ondemand") {
-         but3 = "selected";
-         var extra_buttons = "";
-         if (res.subscription_type == null) {
-            subscription = "no subscription";
-            extra_buttons = get_extra_buttons(res.member_id, "add", false, new Date());
-         } else {
-            var valid_till = new Date(res.subscription_ends * 1000);
-            var exp = "";
-            if (valid_till > new Date()) {
-               cls = "green";
-               exp = ", valid till " + valid_till.toDateString();
-               extra_buttons = get_extra_buttons(res.member_id, "change", true, valid_till);
-            } else {
-               cls = "red";
-               exp = ", expired";
-               extra_buttons = get_extra_buttons(res.member_id, "add", false, new Date());
-            }
-            var memb_type = res.member_type;
-            if (memb_type == "before4") {
-               subscription = "<p class='subscription-info-containter'><span class='subscription-info " + cls + 
-                   "''>Membership before 4" + exp + "</span></p>";
-            } else {
-               subscription = "<p class='subscription-info-containter'><span class='subscription-info " + cls +
-                   "''>Regular membership" + exp + "</span></p>";
-            }
-         }
-         memb_info = ("<div class='member-item-info'>" + 
-            subscription + extra_buttons +
-            "</div>");
-      } else if (res.member_type == "recurring") {
-         but2 = "selected";
-         var buttons = "<button onclick='initiate_ipad_transaction(" + res.member_id + ", \"before4\")' type='button'>" +
-            "Initiate new before 4 credit card</button>" +
-            "<button type='button' onclick='initiate_ipad_transaction(" + res.member_id + ", \"youth\")'>Initiate new youth credit card</button>" +
-            "<button onclick='initiate_ipad_transaction(" + res.member_id + ", \"regular\")' type='button'>" +
-            "Initiate new regular credit card</button>";
-         var inf = get_credit_card_info(res.credit_card_token);
-         var pause_buttons = get_pause_buttons(res.memebr_id);
-         memb_info = "<div class='member-item-info'>" + pause_buttons + "<p><span class='subscription-info'><span id='cc-info'>" + inf +
-           "</span>" + buttons + "<p id='list-of-operations'></p>" + "</span></p></div>";
-         refresh_transaction_history(res.member_id);
-      } else if (res.member_type == "perpetual") {
-         but4 = "selected";
-         memb_info = "<div class='member-item-info'>Perpetual membership (routesetters etc.)</div>";
-      } else {
-         memb_type = "error";
-      }
-      var membership_buttons = ("<div class='member-item'>Membership type:" + 
-         "<button class='" + but1 + "' onclick='change_membership(" + res.member_id + ",\"none\")' type='button'>No membership</button>" +
-         "<button class='" + but2 + "' onclick='change_membership(" + res.member_id + ",\"recurring\")' type='button'>Recurring membership</button>" +
-         "<button class='" + but3 + "'onclick='change_membership(" + res.member_id + ",\"ondemand\")' type='button'>On demand membership</button>" +
-         "<button class='" + but4 + "'onclick='change_membership(" + res.member_id + ",\"perpetual\")' type='button'>Perpetual membership</button>"
-         );
-
-      //$("#placeholder").html("<div class='member-form'><div class='member-item'><span>ID: " + res.member_id + "</span> <span>Name: " + res.name + "</span></div>" +
-      //   "<div class='member-item'>Signed up: " + new Date(res.start_timestamp * 1000) + "</div>" +
-      //   membership_buttons + memb_info +
-      //   "</div>");*/
    });
    }, show_error);
 }
@@ -608,6 +558,16 @@ function add_member_async()
    return false;
 }
 
+function update_transactions()
+{
+   show_member_details(global_status.member_id);
+}
+
+function print_mandate()
+{
+   connection.session.call("com.mandate.print", [global_status.member_id]);
+}
+
 function update_entries()
 {
    function parse_time(t)
@@ -787,6 +747,7 @@ connection.onopen = function (session, details) {
       function (sub) {
       }, show_error
    );
+   session.subscribe('com.transaction.notify', update_transactions)
    session.subscribe('com.vouchers.scan', update_voucher).then(
       function (sub) {}, show_error
    );

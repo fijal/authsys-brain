@@ -1,26 +1,5 @@
 var signaturePad;
 
-// the URL of the WAMP Router (Crossbar.io)
-//
-/*var wsuri;
-if (document.location.origin == "file://") {
-   wsuri = "ws://127.0.0.1:8080/ws";
-
-} else {
-   wsuri = (document.location.protocol === "http:" ? "ws:" : "wss:") + "//" +
-               document.location.host.split(":")[0] + ":8080" + "/ws";
-}
-
-
-// the WAMP connection to the Router
-//
-var connection = new autobahn.Connection({
-   url: wsuri,
-   realm: "authsys",
-   max_retries: -1,
-   max_retry_delay: 3,
-});*/
-
 function update_data(r)
 {
     var no = r;
@@ -28,27 +7,11 @@ function update_data(r)
     window.location = "http://" + d + "/update?id=" + no;
 }
 
-function notify_broadcast(r)
-{
-    var no = r[0];
-    var sum = r[1];
-    var d = document.location.host.split(":")[0];
-    window.location = "http://" + d + ":8080/payment.html?id=" + no + "&sum=" + sum;
-}
-
 $(document).ready(function () {
     var wrapper = document.getElementById("signature-pad"),
         clearButton = wrapper.querySelector("[data-action=clear]"),
         saveButton = wrapper.querySelector("[data-action=save]"),
         canvas = wrapper.querySelector("canvas");
-
-    /*connection.onopen = function(session, details)
-    {
-        session.subscribe('com.payments.notify_broadcast', notify_broadcast);
-        session.subscribe('com.members.update_data_broadcast', update_data);
-    }
-
-    connection.open();*/
 
     // Adjust canvas coordinate space taking into account pixel ratio,
     // to make it look crisp on mobile devices.
@@ -111,6 +74,23 @@ $(document).ready(function () {
       $("#error").removeClass('show');
     })
 
+    function do_poll()
+    {
+      $.post('/signup/poll').done(function (data) {
+        data = JSON.parse(data);
+        if (data.redirect == 'bank') {
+          window.location = `/bank_details.html?name=${data.name}&next_monday=${data.next_monday}&contact-number=${data.contact_number}&member_id=${data.member_id}&price=${data.price}&subscription_type=${data.subscription_type}`;
+        } else {
+          console.log(data);
+          setTimeout(do_poll, 500);
+        }
+      }).fail(function (arg) {
+        setTimeout(do_poll, 5000);
+      });
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('refresh'))
+      do_poll();
 });
 
 function save_signature()

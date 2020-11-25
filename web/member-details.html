@@ -37,17 +37,27 @@
       {% elif member_type == "recurring" %}
   <div class='member-item'>
       <div class="row space-below">
-        <div class="col-6">
-        <div id="cc-info">
-        {% if credit_card_id == null %}
-           No credit card on file
-        {% else %}
-           Credit card known
-        {% endif %}
+        <div class="col-3">
         </div>
+        <div class="col-6">
+          {% if account_number == null %}
+              <b>No bank account on file</b>
+          {% else %}
+              <b>Bank account known</b>
+          {% endif %}
+        </div>
+      </div>
+      <div class="row space-below">
+        <div class="col-3">
         </div>
         <div class="col-3">
-         <button type="button" class="btn btn-block btn-success" onclick="initiate_ipad_transaction({{ member_id }}, '{{ subscription_type }}')">Initiate payment</button>
+         <button type="button" id="initiate-payment-button" class="btn btn-block btn-success" onclick="initiate_ipad_transaction({{ member_id }}, '{{ name }}', '{{ phone }}', '{{ subscription_type }}', {{ price }}, {{ next_monday }})">Capture bank account details</button>
+        </div>
+        <div class="col-3">
+          <button type="button" {{ disableifnobankdetails }} onclick="print_mandate()" id="print-mandate-button" class="btn btn-block btn-success">Print mandate</button>
+        </div>
+        <div class="col-3">
+          <button type="button" {{ disableifnobank details }} onclick="sign_mandate()" id="mark-mandate-signed" class="btn btn-block btn-success">Signed mandate</button>
         </div>
       </div>
       <div class="row">
@@ -174,8 +184,8 @@
           {% endif %}
           <div class="row">
             <div class="col-12">
-              Operations: <button onclick="add_one_month({{member_id}}, '{{ subscription_type }}')" type="button" class="btn btn-info">Add one month from last membership</button>
-              <button onclick="add_one_month_from_now({{member_id}}, '{{ subscription_type }}')" type="button" class="btn btn-info">
+              Operations: <button id="add-one-month-button" onclick="add_one_month({{member_id}}, '{{ subscription_type }}')" type="button" class="btn btn-info">Add one month from last membership</button>
+              <button id="add-one-month-from-now-button" onclick="add_one_month_from_now({{member_id}}, '{{ subscription_type }}')" type="button" class="btn btn-info">
                 Add one month from now
               </button>
             </div>
