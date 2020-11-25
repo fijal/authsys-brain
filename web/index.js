@@ -52,6 +52,7 @@ function find_in_string(filter, string)
    if (string == null)
       return false;
    var lc = string.toLowerCase();
+   filter = filter.toLowerCase();
    var found = true;
    var allitems = filter.split(/ +/);
    for (var item in allitems) {

@@ -1,7 +1,7 @@
 
 import main, base64, py, os, time, json
 from authsys_common.scripts import get_db_url, get_config
-from authsys_common.model import members
+from authsys_common.model import members, daily_passes
 from authsys_common import queries as q
 
 from sqlalchemy import select, func
@@ -82,7 +82,7 @@ class SignupManager(APIResource):
 
     @methods.POST('^/signup/submit$')
     def submit(self, request):
-        main.con.execute(members.insert().values({
+        r = main.con.execute(members.insert().values({
             'name': request.args['name'][0] + " " + request.args['surname'][0],
             'email': request.args['email'][0],
             'phone': request.args['phone'][0],
@@ -93,8 +93,13 @@ class SignupManager(APIResource):
             'show_up_reason': request.args['reason'][0],
             'timestamp': int(time.time()),
         }))
+        main.con.execute(daily_passes.insert().values({
+            'member_id': r.lastrowid,
+            'gym_id': get_config().get('gym', 'id'),
+            'timestamp': int(time.time())
+            }))
         #thread.start_new_thread(send_email, (request.args['email'],))
-        return py.path.local(__file__).join('..', 'web', 'thankyou.html').read().replace("{{foo}}", request.args['filename'][0])
+        return py.path.local(__file__).join('..', 'web', 'thankyou.html').read().replace("{{foo}}", request.args['name'][0])
 
     @methods.POST('^/signup/photo')
     def upload_photo(self, request):
