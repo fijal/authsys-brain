@@ -83,7 +83,7 @@ class SignupManager(APIResource):
     @methods.POST('^/signup/submit$')
     def submit(self, request):
         r = main.con.execute(members.insert().values({
-            'name': request.args['name'][0] + " " + request.args['surname'][0],
+            'name': request.args['name'][0].decode('utf8') + u" " + request.args['surname'][0].decode('utf8'),
             'email': request.args['email'][0],
             'phone': request.args['phone'][0],
             'emergency_phone': request.args['emergency-phone'][0],
