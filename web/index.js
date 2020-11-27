@@ -524,9 +524,9 @@ function _update_visitor_list(filter)
             "class='daypass' type='button'>Undo COVID</button>";
          }*/
          r += ("<div class='row'><div class='col-3'>" + free_pass_button + '<button onclick="daypass_change(this, ' + elem.member_id +
-               ')" class="daypass" type="button">' + text + '</button><a href="#" onclick="return show_form(' + 
-               elem.member_id + ')"></a></div><div class="col">' + cap_name +
-               '</div><div class="col">' + elem.email + '</div><div class="col">' + elem.phone +
+               ')" class="daypass" type="button">' + text + '</button></div><div class="col"><a href="#" onclick="return show_form(' + 
+               elem.member_id + ')">' + cap_name +
+               '</a></div><div class="col">' + elem.email + '</div><div class="col">' + elem.phone +
                '</div><div class="col">emergency:' + elem.emergency_phone + '</div></div>');
          j += 1;
       }
