@@ -112,7 +112,7 @@ class AppSession(ApplicationSession):
         con.execute(entries.insert().values(timestamp=int(time.time()), token_id=token_id,
                                             gym_id=gym_id))
         self.publish(u'com.members.entry')
-        return q.is_valid_token(con, token_id, int(time.time()))
+        return q.is_valid_token(con, token_id, int(time.time()), gym_id)
 
     def list_entries(self, gym_id):
         t0 = time.time() - 24 * 3600
