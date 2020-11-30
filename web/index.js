@@ -631,7 +631,7 @@ function update_entries()
       return r;
    }
 
-   connection.session.call('com.members.list_entries').then(function(res){
+   connection.session.call('com.members.list_entries', [global_status.gym_id]).then(function(res){
       var r = "Total number of people who entered in the last 2h: " + res['total'] + "<br/>";
       for (var i in res['entries']) {
          r += show_entry(res['entries'][i]);

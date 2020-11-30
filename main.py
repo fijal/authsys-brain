@@ -114,16 +114,16 @@ class AppSession(ApplicationSession):
         self.publish(u'com.members.entry')
         return q.is_valid_token(con, token_id, int(time.time()))
 
-    def list_entries(self):
+    def list_entries(self, gym_id):
         t0 = time.time() - 24 * 3600
-        return q.entries_after(con, t0)
+        return q.entries_after(con, t0, int(gym_id))
 
     def reader_visible(self, no):
         self.readers_last_seen[no] = time.time()
         self.publish(u'com.members.healthcheck', self.readers_last_seen)
 
-    def get_last_unassigned(self, tstamp):
-        return q.unrecognized_entries_after(con, tstamp)[0]
+    def get_last_unassigned(self, tstamp, gym_id):
+        return q.unrecognized_entries_after(con, tstamp, int(gym_id))[0]
 
     def daypass_change(self, no, gym_id):
         q.daypass_change(con, no, gym_id)
