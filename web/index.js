@@ -640,7 +640,7 @@ function update_entries()
    }, show_error);
    if (global_status.get_form_timestamp != 0) {
       connection.session.call('com.tokens.get_last_unassigned',
-         [global_status.get_form_timestamp]).then(function(res) {
+         [global_status.get_form_timestamp, global_status.gym_id]).then(function(res) {
             $("#form_get_scanner").removeClass("red");
             $("#form_get_scanner").addClass("green");
             $("#form_get_scanner").text(res);
