@@ -432,7 +432,7 @@ function filter_visitors()
 
 function daypass_change(button, no)
 {
-   connection.session.call('com.daypass.change', [no]).then(function(res) {
+   connection.session.call('com.daypass.change', [no, global_status.gym_id]).then(function(res) {
    }, show_error);
    if ($(button).text() == "day pass")
       $(button).text("cancel day pass");
@@ -442,7 +442,7 @@ function daypass_change(button, no)
 
 function member_visit_change(button, no)
 {
-   connection.session.call('com.visit.change', [no]).then(function(res) {
+   connection.session.call('com.visit.change', [no, global_status.gym_id]).then(function(res) {
    }, show_error);
    if ($(button).text() == "member visit")
       $(button).text("cancel member visit");
@@ -761,6 +761,7 @@ connection.onopen = function (session, details) {
    }, show_error);
    healthcheck_interval = setInterval(healthcheck_update, 1000);
 
+   global_status.gym_id = parse_cookie().gym_id;
 };
 
 
@@ -797,6 +798,17 @@ $(document).ready(function () {
    connection.open();
 });
 
+function parse_cookie() {
+   var a = {};
+   var cookies = document.cookie.split(";");
+   for (var p in cookies) {
+      var p1 = cookies[p];
+      var x = p1.split("=");
+      a[x[0].trim()] = x[1];
+   }
+   return a;
+}
+
 function clear_modal_context()
 {
    $("#login-modal-context").text("");
@@ -810,6 +822,8 @@ function connect_to_autobahn()
       return;
    }
    $("#login-modal-context").text("connecting....");
+   var d = parse_cookie();
+   document.cookie = "gym_id= " + $("#gym_id").val() + "; expires=Fri, 1 Dec 2100 12:00:00 UTC; path=/"
    connection.open();
 }
 

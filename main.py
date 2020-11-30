@@ -108,9 +108,7 @@ class AppSession(ApplicationSession):
         con.execute(tokens.insert().values(member_id=member_id, id=token_id,
             valid=True, timestamp=int(time.time())))
 
-    def register_token(self, token_id):
-        conf = get_config()
-        gym_id = conf.get('gym', 'id')
+    def register_token(self, token_id, gym_id):
         con.execute(entries.insert().values(timestamp=int(time.time()), token_id=token_id,
                                             gym_id=gym_id))
         self.publish(u'com.members.entry')
@@ -127,11 +125,11 @@ class AppSession(ApplicationSession):
     def get_last_unassigned(self, tstamp):
         return q.unrecognized_entries_after(con, tstamp)[0]
 
-    def daypass_change(self, no):
-        q.daypass_change(con, no)
+    def daypass_change(self, no, gym_id):
+        q.daypass_change(con, no, gym_id)
 
-    def member_visit_change(self, no):
-        q.member_visit_change(con, no)
+    def member_visit_change(self, no, gym_id):
+        q.member_visit_change(con, no, gym_id)
 
     def league_register(self, no):
         q.league_register(con, no)
