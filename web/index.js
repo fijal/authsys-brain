@@ -693,22 +693,31 @@ function show_error(err) {
 function healthcheck_update()
 {
    var cur_time = new Date().getTime() / 1000;
-   var diff = cur_time - last_healthcheck[0];
-   if (diff < 3) {
-      $("#reader-status-circle").removeClass("red");
-      $("#reader-status-circle").addClass("green");
-      $("#reader-status-text").html("reader 1");
-   } else {
-      $("#reader-status-circle").removeClass("green");
-      $("#reader-status-circle").addClass("red");
-      if (last_healthcheck[0] == 0)
-         $("#reader-status-text").html("reader 1 never seen");
-      else
-         $("#reader-status-text").html("reader 1: Last seen: " + Math.ceil(diff) + " seconds ago");
+   for (var i = 0; i < 2; i++) {
+      var reader = i + 1;
+      var prefix;
+      if (reader == 1) {
+         prefix = "Reader Paarden Eiland";
+      } else if (reader == 2) {
+         prefix = "Reader Bloc South";
+      }
+      var diff = cur_time - last_healthcheck[i];
+      if (diff < 3) {
+         $("#reader-status-circle-" + reader).removeClass("red");
+         $("#reader-status-circle-" + reader).addClass("green");
+         $("#reader-status-text-" + reader).html(prefix);
+      } else {
+         $("#reader-status-circle-" + reader).removeClass("green");
+         $("#reader-status-circle-" + reader).addClass("red");
+         if (last_healthcheck[i] == 0)
+            $("#reader-status-text-" + reader).html(prefix + " never seen");
+         else
+            $("#reader-status-text-" + reader).html(prefix + ": Last seen: " + Math.ceil(diff) + " seconds ago");
+      }
    }
 }
 
-var last_healthcheck = [0];
+var last_healthcheck = [0, 0];
 var healthcheck_interval = null;
 var last_voucher = null;
 

@@ -237,7 +237,7 @@ class AppSession(ApplicationSession):
         #    self.log.info("add2() called with {x} and {y}", x=x, y=y)
         #    return x + y
 
-        self.readers_last_seen = [0]
+        self.readers_last_seen = [0, 0]
         yield self.register(self.list_members, u'com.members.list')
         yield self.register(self.add_token, u'com.tokens.add')
         yield self.register(self.register_token, u'com.members.register_token')
