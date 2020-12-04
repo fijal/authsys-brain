@@ -739,7 +739,7 @@ connection.onopen = function (session, details) {
    $("#login-modal-password").prop("value", "")
 
    function healthcheck(r) {
-      last_healthcheck = r;
+      last_healthcheck = r[0];
    }
 
    function update_voucher(v) {
