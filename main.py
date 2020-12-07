@@ -49,14 +49,12 @@ class VoucherManager(APIResource):
 
         rand = os.urandom(8).encode('hex')
 
-        EAN = barcode.get_barcode_class('code128')
-
         r = con.execute(vouchers.insert().values(fullname=request.args['name'][0].decode('utf8'),
             reason=request.args['reason'][0].decode('utf8'), extra=request.args['extra'][0].decode('utf8'),
             unique_id=rand, used=False, timestamp=int(time.time())))
         no = str(r.lastrowid)
 
-        ean = EAN(str(rand))
+        ean = barcode.get('code128', str(rand))
         fullname = ean.save('/tmp/ean13_barcode')
         svg2png(url=fullname, write_to="/tmp/out.png", dpi=300)
 
