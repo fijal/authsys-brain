@@ -778,6 +778,10 @@ connection.onopen = function (session, details) {
 //
 connection.onclose = function (reason, details) {
    $("#login-modal").modal({show: true, backdrop: "static"});
+   var preselected_gym_id = parse_cookie().gym_id;
+   if (preselected_gym_id != undefined && preselected_gym_id != null) {
+      $("#gym_id").val(preselected_gym_id);
+   }
    var real_reason;
    if (details.reason == "wamp.error.not_authorized") {
       real_reason = "Authorization failure";
