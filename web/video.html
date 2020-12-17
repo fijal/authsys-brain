@@ -3,31 +3,46 @@
       <link href="bootstrap.min.css" rel="stylesheet"/>
       <link href="bootstrap-datetimepicker.min.css" rel="stylesheet"/>
       <link href="font-awesome.min.css" rel="stylesheet"/>
-      <link rel="stylesheet" type="text/css" href="styles.css" />
+      <link rel="stylesheet" type="text/css" href="styles.css?reload=1" />
       <script src="jquery-3.1.1.min.js"></script>
       <script src="moment.min.js"></script>
       <script src="nunjucks.min.js"></script>
       <script src="popper.js"></script>
       <script src="bootstrap.js"></script>
       <script src="bootstrap-datetimepicker.min.js"></script>
-      <script src="video.js"></script>
+      <script src="video.js?reload=1"></script>
     <script>
     </script>
 </head>
 <body>
-    <div class="contentarea">
-    <h1>
-        Using Javascript to capture Photo
-    </h1>
-    <div class="camera">
-        <video id="video">Video stream not available.</video>
+    <div class="container">
+      <div class="row margin-top">
+        <div class="col-12">
+          <span class="camera">
+            <video id="video">Video stream not available.</video>
+          </span>
+        </div>
+      </div>
+      <div id="take-pic-row" class="row margin-top">
+        <div class="col-12 text-center">
+          <button onclick="take_picture()" id="take-pic-button" class="btn orange-button">Take picture</button>
+        </div>
+      </div>
+      <div id="confirm-pic-row" class="row margin-top">
+        <div class="col-6 text-center">
+          <button onclick="restart_process()" id="restart-button" class="btn orange-button">Take picture again</button>
+        </div>
+        <div class="col-6 text-center">
+          <button onclick="save_picture()" id="save-picture-button" class="btn orange-button">Save picture</button>
+        </div>
+      </div>
     </div>
-    <div><button id="startbutton">Take photo</button></div>
+    <!--<div><button id="startbutton">Take photo</button></div>
     
     <canvas id="canvas"></canvas>
     <div class="output">
         <img id="photo" alt="The screen capture will appear in this box."> 
     </div>
-    </div>
+    </div>-->
 </body>
 </html>

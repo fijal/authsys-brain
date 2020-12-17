@@ -1,6 +1,6 @@
 var streaming = false;
 
-var width = 320; // We will scale the photo width to this
+var width = window.innerWidth * 8 / 10; // We will scale the photo width to this
 var height = 0; // This will be computed based on the input stream
 
 var video = null;
@@ -35,6 +35,7 @@ function startup() {
             if (isNaN(height)) {
                 height = width / (4 / 3);
             }
+            height = Math.min(height, window.innerHeight * 7 / 10);
 
             video.setAttribute('width', width);
             video.setAttribute('height', height);
@@ -59,6 +60,11 @@ function clearphoto() {
 
     var data = canvas.toDataURL('image/png');
     photo.setAttribute('src', data);
+}
+
+function take_picture() {
+    $("#take-pic-row").hide();
+    $("#confirm-pic-row").css("display", "flex");
 }
 
 function takepicture() {

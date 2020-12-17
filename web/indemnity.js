@@ -80,6 +80,8 @@ $(document).ready(function () {
         data = JSON.parse(data);
         if (data.redirect == 'bank') {
           window.location = `/bank_details.html?name=${data.name}&next_monday=${data.next_monday}&contact-number=${data.contact_number}&member_id=${data.member_id}&price=${data.price}&subscription_type=${data.subscription_type}`;
+        } else if (data.redirect == 'photo') {
+          window.location = '/video.html';
         } else {
           console.log(data);
           setTimeout(do_poll, 500);

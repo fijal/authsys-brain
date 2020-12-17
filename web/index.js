@@ -505,7 +505,7 @@ function _update_visitor_list(filter)
          } else {
             text = 'cancel day pass';
          }
-         if (elem.free_pass_timestamp == null) {
+         if (elem.last_entry_timestamp == null) {
             free_pass_text = 'member visit';
          } else {
             free_pass_text = 'cancel member visit';

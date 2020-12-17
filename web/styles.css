@@ -39,6 +39,24 @@ body {
     color: #666;
 }
 
+.camera {
+    padding-top: 5%;
+/*    margin-left: 10%;*/
+}
+
+#take-pic-container {
+    align-self: center;
+}
+
+.orange-button {
+    font-size: 40px;
+    background: #F26522;
+}
+
+#confirm-pic-row {
+    display: none;
+}
+
 /*.tabs li a {
     margin: 0 2px;
     background-color: #f7f7f7;
@@ -176,6 +194,10 @@ ul {
     padding: 3px;
     margin-left: 5px;
     margin-top: 5px;
+}
+
+.margin-top {
+    margin-top: 10px;
 }
 
 .subscription-info-containter-2 {
