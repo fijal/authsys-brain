@@ -68,20 +68,24 @@ $(document).ready(function () {
     $('#id_no').on('keydown', function(){
       $('#id-input').removeClass('error');
       $("#error").removeClass('show');
-    })
+    });
     $('#email').on('keydown', function(){
       $('#email-input').removeClass('error');
       $("#error").removeClass('show');
-    })
+    });
+    const urlParams = new URLSearchParams(window.location.search);
+
+    $("#gym_id").val(urlParams.get('gym_id'));
+
 
     function do_poll()
     {
-      $.post('/signup/poll').done(function (data) {
+      $.post('/signup/poll?gym_id=' + urlParams.get('gym_id')).done(function (data) {
         data = JSON.parse(data);
         if (data.redirect == 'bank') {
           window.location = `/bank_details.html?name=${data.name}&next_monday=${data.next_monday}&contact-number=${data.contact_number}&member_id=${data.member_id}&price=${data.price}&subscription_type=${data.subscription_type}`;
         } else if (data.redirect == 'photo') {
-          window.location = '/video.html';
+          window.location = `/video.html?member_id=${data.member_id}&gym_id=${data.gym_id}`;
         } else {
           console.log(data);
           setTimeout(do_poll, 500);
@@ -90,7 +94,6 @@ $(document).ready(function () {
         setTimeout(do_poll, 5000);
       });
     }
-    const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('refresh'))
       do_poll();
 });

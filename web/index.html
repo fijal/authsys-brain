@@ -14,9 +14,9 @@
             <li class="selected"><a href="#" onclick="show('current_status', this); return false;">SYSTEM STATUS</a></li>
             <li class="selectable"><a href="#" onclick="show('list_entries', this); update_entries(); return false;">ACCESS LOG</a></li>
             <li id="member-lookup-li" class="selectable"><a href="#" onclick="show('member_lookup', this); initialize_member_list(); return false;">MEMBERS</a></li>
-            <li class="selectable"><a href="#" onclick="show('member_add', this); initialize_visitor_list(); return false;">ALL VISITORS</a></li>
             <li class="selectable"><a href="#" onclick="show('statistics', this); show_statistics(); return false;">STATISTICS</a></li>
             <li class="selectable"><a href="#" onclick="show('vouchers', this); show_vouchers(); return false;">VOUCHERS</a></li>
+            <li>Gym: <span id="gym_id_placeholder"></span></li>
          </ul>
       </div>
       <div class="container">
@@ -37,11 +37,15 @@
             </ul>
          </div>
          <div id="member_lookup" style="display: none">
-            <h1>Member Lookup</h1>
+            <h1 class="padding-left-15">Member Lookup</h1>
             <div class="container">
-                <div class="row" id="filter-member">Filter: <input id="filter-text" onkeyup="return filter_members();" size=50 type="text"/></div>
-                <div id="placeholder"></div>
-             </div>
+               <div class="row" id="filter-member">
+                  <div class="col-12">
+                  Filter: <input id="filter-text" onkeyup="return filter_members();" size=50 type="text"/>
+                  </div>
+               </div>
+               <div id="placeholder"></div>
+            </div>
          </div>
          <div id="member_add" style="display: none">
             <h1>All visitors</h1>
@@ -159,6 +163,18 @@
                </div>
                <div class="modal-footer">
                   <button onclick="connect_to_autobahn()">Log in</button>
+               </div>
+            </div>
+         </div>
+      </div>
+      <div class="modal" role="dialog" id="add-member-modal">
+         <div class="modal-dialog">
+            <div class="modal-content">
+               <div class="modal-header">
+                  Please scan a tag to add a member
+               </div>
+               <div class="modal-body" id="add-member-inner">
+                  XXXX
                </div>
             </div>
          </div>

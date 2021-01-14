@@ -50,30 +50,37 @@ banks = {
 
 
 class CurrentRequestData(object):
-    current_request = None
+    current_request = [None] * 10
 
     def update(self, request):
-        if self.current_request is not None:
+        gym_id = int(request.args['gym_id'][0])
+        if self.current_request[gym_id] is not None:
             try:
-                self.current_request.write("{}")
-                self.current_request.finish()
+                self.current_request[gym_id].write("{}")
+                self.current_request[gym_id].finish()
             except Exception as e:
                 print("Error occured: " + str(e))
                 # eat all the exceptions here
-        self.current_request = request
+        self.current_request[gym_id] = request
 
     def notify(self, **kwds):
-        if self.current_request is None:
+        gym_id = int(kwds['gym_id'])
+        if self.current_request[gym_id] is None:
             print("No request")
             return
         d = kwds.copy()
-        d['redirect'] = 'bank'
-        self.current_request.write(json.dumps(d))
-        self.current_request.finish()
-        self.current_request = None
+        d['redirect'] = kwds.get('type')
+        try: # maybe the request was stale
+            self.current_request[gym_id].write(json.dumps(d))
+            self.current_request[gym_id].finish()
+        except:
+            print("Found stale request, not notifying")
+        finally:
+            self.current_request[gym_id] = None
 
 
 current_request_data = CurrentRequestData()
+request_submitted_data = CurrentRequestData() # polling for the main website
 
 
 class SignupManager(APIResource):
@@ -93,45 +100,89 @@ class SignupManager(APIResource):
             'show_up_reason': request.args['reason'][0],
             'timestamp': int(time.time()),
         }))
-        main.con.execute(daily_passes.insert().values({
-            'member_id': r.lastrowid,
-            'gym_id': get_config().get('gym', 'id'),
-            'timestamp': int(time.time())
-            }))
+        member_id = r.lastrowid
+        try:
+            int(request.args['gym_id'][0])
+        except (KeyError, ValueError):
+            gym_id = "null"
+        else:
+            main.con.execute(daily_passes.insert().values({
+                'member_id': member_id,
+                'gym_id': int(request.args['gym_id'][0]),
+                'timestamp': int(time.time())
+                }))
+            gym_id = request.args['gym_id'][0]
         #thread.start_new_thread(send_email, (request.args['email'],))
-        return py.path.local(__file__).join('..', 'web', 'thankyou.html').read().replace("{{foo}}", request.args['name'][0])
+        return py.path.local(__file__).join('..', 'web', 'thankyou.html').read().replace(
+            "{{name}}", request.args['name'][0]).replace(
+            "{{member_id}}", str(member_id)).replace(
+            "{{gym_id}}", gym_id)
 
     @methods.POST('^/signup/photo')
     def upload_photo(self, request):
         d = request.content.read()
-        print(d)
+        args = {}
+        l = request.uri.split("?")[1].split("=")
+        for i in range(0, len(l), 2):
+            args[l[i]] = l[i + 1]
+        member_id = args['member_id']
         prefix = "data:image/png;base64,"
         assert d.startswith(prefix)
         store_dir = get_config().get('data', 'store_dir')
         # invent new filename
-        XXXX
-        no = list(main.con.execute(select([func.count(members)])))[0][0]
-        fname = os.path.join(store_dir, "signature_%d.png" % int(no))
+        base_no = member_id
+        no = base_no
+        fname = os.path.join(store_dir, "photo_%s.png" % no)
+        count = 1
+        while os.path.exists(fname):
+            no = base_no + "_" + str(count)
+            fname = os.path.join(store_dir, "photo_%s.png" % no)
+            count += 1
         d = d[len(prefix):]
         if (len(d) % 4) != 0:
             d += "=" * (4 - (len(d) % 4))
         with open(fname, "w") as f:
             f.write(base64.b64decode(d, " /"))
-        return fname
+        print(member_id, fname)
+        main.con.execute(members.update().where(members.c.id == member_id).values(
+            photo=fname))
+        return json.dumps({'success': True, 'filename': fname, 'member_id': member_id})
+
+    @methods.GET('^/signup/get_photo')
+    def get_photo(self, request):
+        member_id = request.args['member_id'][0]
+        lst = list(main.con.execute(select([members.c.photo]).where(members.c.id == member_id)))
+        if lst[0][0] is None:
+            return ''
+        with open(lst[0][0]) as f:
+            return f.read()
 
     @methods.POST('^/signup/poll')
     def poll(self, request):
         current_request_data.update(request)
         return NOT_DONE_YET
 
+    @methods.POST('^/signup/poll_main')
+    def poll_main(self, request):
+        request_submitted_data.update(request)
+        return NOT_DONE_YET
+
+    @methods.POST('^/signup/notify_picture')
+    def notify_picture(self, request):
+        gym_id = request.args['gym_id'][0]
+        member_id = request.args['member_id'][0]
+        current_request_data.notify(gym_id=gym_id, member_id=member_id, type='photo')
+        return json.dumps({'success': True})
+
     @methods.POST('^/signup/notify')
     def notify(self, request):
         name = request.args['name'][0]
         contact_no = request.args['contact_number'][0]
-        current_request_data.notify(name=name, contact_number=contact_no,
+        current_request_data.notify(gym_id=request.args['gym_id'][0], name=name,
+            contact_number=contact_no,
             member_id=request.args['member_id'][0], price=request.args['price'][0],
             subscription_type=request.args['subscription_type'][0],
-            next_monday=request.args['next_monday'][0])
+            next_monday=request.args['next_monday'][0], type='bank')
         return json.dumps({'success': True})
 
     @methods.GET('^/signup/check_bank_account')
@@ -165,6 +216,12 @@ class SignupManager(APIResource):
         treq.request("POST", url, headers={"Content-Type": "application/json"}, json={"procedure": "com.notify"})
         # generate a PDF in a separate thread with all the information
         return py.path.local(__file__).join('..', 'web', 'thankyou-bank.html').read()
+
+    @methods.GET('^/signup/thankyou_photo')
+    def thankyou_photo(self, request):
+        request_submitted_data.notify(gym_id=request.args['gym_id'][0], type='photo')
+        return py.path.local(__file__).join('..', 'web', 'thankyou_photo.html').read().replace(
+            '{{who}}', request.args['name'][0]).replace('{{gym_id}}', request.args['gym_id'][0])
 
     @methods.POST('^/signup/upload_signature')
     def upload_signature(self, request):

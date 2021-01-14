@@ -7,12 +7,14 @@ var video = null;
 var canvas = null;
 var photo = null;
 var startbutton = null;
+var gym_id = null;
 
 function startup() {
     video = document.getElementById('video');
-    canvas = document.getElementById('canvas');
+    canvas = document.getElementById('pic-capture-canvas');
     photo = document.getElementById('photo');
     startbutton = document.getElementById('startbutton');
+    gym_id = new URLSearchParams(window.location.search).get("gym_id");
 
     // access video stream from webcam
     navigator.mediaDevices.getUserMedia({
@@ -30,12 +32,8 @@ function startup() {
 
     video.addEventListener('canplay', function(ev) {
         if (!streaming) {
-            height = video.videoHeight / (video.videoWidth / width);
-
-            if (isNaN(height)) {
-                height = width / (4 / 3);
-            }
-            height = Math.min(height, window.innerHeight * 7 / 10);
+            width = video.videoWidth;
+            height = video.videoHeight;
 
             video.setAttribute('width', width);
             video.setAttribute('height', height);
@@ -45,41 +43,37 @@ function startup() {
         }
     }, false);
 
-    startbutton.addEventListener('click', function(ev) {
-        takepicture();
-        ev.preventDefault();
-    }, false);
-
-    clearphoto();
-}
-
-function clearphoto() {
-    var context = canvas.getContext('2d');
-    context.fillStyle = "#AAA";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    var data = canvas.toDataURL('image/png');
-    photo.setAttribute('src', data);
 }
 
 function take_picture() {
     $("#take-pic-row").hide();
     $("#confirm-pic-row").css("display", "flex");
-}
-
-function takepicture() {
     var context = canvas.getContext('2d');
     if (width && height) {
-        canvas.width = width;
-        canvas.height = height;
+        canvas.setAttribute("width", Math.min(video.videoWidth, width));
+        canvas.setAttribute("height", height);
         context.drawImage(video, 0, 0, width, height);
-
-        var data = canvas.toDataURL('image/png');
-        $.post("/signup/photo", data, function (res) { console.log(res); });
-        photo.setAttribute('src', data);
-    } else {
-        clearphoto();
     }
+    $("#video-stream").hide();
+    $("#pic-capture").css("display", "flex");
+}
+
+function restart_process() {
+    $("#confirm-pic-row").hide();
+    $("#take-pic-row").css("display", "flex");
+    $("#video-stream").css("display", "flex");
+    $("#pic-capture").hide();
+}
+
+function save_picture() {
+    $("#save-picture-button").attr("disabled", true);
+    var data = canvas.toDataURL('image/png');
+    var url_search_params = new URLSearchParams(window.location.search)
+    var member_id = url_search_params.get("member_id");
+    var name = url_search_params.get('name');
+    $.post("/signup/photo?member_id=" + member_id, data, function (res) {
+        window.location = '/signup/thankyou_photo?gym_id=' + gym_id + '&name=' + name;
+    });
 }
 
 window.addEventListener('load', startup, false);

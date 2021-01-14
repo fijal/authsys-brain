@@ -17,3 +17,4 @@ alter table members add debit_order_signup_timestamp integer;
 
 alter table entries add gym_id integer;
 alter table daily_passes add gym_id integer;
+alter table free_passes add gym_id integer;

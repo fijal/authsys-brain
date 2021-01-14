@@ -16,11 +16,19 @@
 </head>
 <body>
     <div class="container">
-      <div class="row margin-top">
+      <div class="row">
+        <div class="col-12 text-center"><b>Please select a good picture of yourself</b></div>
+      </div>
+      <div id="video-stream"  class="row margin-top text-center">
         <div class="col-12">
           <span class="camera">
             <video id="video">Video stream not available.</video>
           </span>
+        </div>
+      </div>
+      <div class="row margin-top text-center" style="display: none" id="pic-capture">
+        <div class="col-12">
+          <canvas id="pic-capture-canvas"></canvas>
         </div>
       </div>
       <div id="take-pic-row" class="row margin-top">

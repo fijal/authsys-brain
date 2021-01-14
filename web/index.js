@@ -73,19 +73,19 @@ function update_member_list(filter)
    {
       global_status.member_list = res;
 
-      var r = "<div class='container'>";
+      var r = "<div class='row'><div class='col-12'><div class='container extra-minus-padding'>";
       for (var i in res) {
          found = find_in_string(filter, res[i].name) || find_in_string(filter, res[i].email) || find_in_string(filter, res[i].phone);
          if (found) {
             var phone = res[i].phone;
             if (phone == null)
                phone = "";
-            r += ("<a href='#' onclick='show_member_details(" + res[i].id + ")'><div class='row'><div class='col'>" + 
-                  res[i].name + "</div><div class='col'>" + phone + "</div><div class='col'>" + res[i].email +
-                  "</div></div></a>");
+            r += ("<div class='row'><div class='col'><a href='#' onclick='show_member_details(" + res[i].id + ")'>" + 
+                  res[i].name + "</a></div><div class='col'>" + phone + "</div><div class='col'>" + res[i].email +
+                  "</div></div>");
          }
       }
-      r += '</div>'
+      r += '</div></div></div>'
       $("#placeholder").html(r);
    }
    var res = global_status.member_list;
@@ -141,6 +141,19 @@ function add_one_month(no, tp)
          $("#add-one-month-button").attr("disabled", false);
          show_member_details(no)
       }, show_error);
+}
+
+function assign_tag(button, no, name, id_number)
+{
+   $("#add-member-modal").modal("show");
+   global_status.get_form_timestamp = new Date() / 1000;
+   global_status.member_id = no;
+   global_status.visitor_form = true;
+   global_status.member_name = name;
+
+   nunjucks.render('visitor-details.html', {name: name, id_number: id_number, no: no}, function(err, html) {
+      $("#add-member-inner").html(html);
+   }, show_error);
 }
 
 function add_one_month_from_now(no, tp)
@@ -236,11 +249,22 @@ function refresh_transaction_history(no)
    });
 }
 
+function take_picture(member_id)
+{
+   $.post("/signup/notify_picture", {'gym_id': global_status.gym_id,
+                                     'member_id': member_id});
+   $.post('/signup/poll_main', {'gym_id': global_status.gym_id}).then(
+      update_transactions, show_error
+   );
+
+}
+
 function initiate_ipad_transaction(member_id, name, phone, sub_type, price, next_monday)
 {
    $("#initiate-payment-button").attr("disabled", true);
    connection.session.call("com.transaction.start", [member_id]);
-   $.post('/signup/notify', {'member_id': member_id, 'name': name,
+   $.post('/signup/notify', {'gym_id': global_status.gym_id,
+                             'member_id': member_id, 'name': name,
                              'contact_number': phone, 'subscription_type': sub_type, 'price': price,
                              'next_monday': next_monday},
       function(res) {
@@ -328,6 +352,30 @@ function show_member_details(no, extra_callback)
       } else {
          res['disableifnobankdetails'] = 'disabled';
       }
+      if (res.daypass_timestamp) {
+         res['btn_primary_if_day_visit'] = 'btn-primary';
+         res['daypass_timestamp'] = moment(new Date(res.daypass_timestamp * 1000)).format("HH:mm");
+      } else {
+         res['btn_primary_if_day_visit'] = 'btn-secondary';
+      }
+
+      if (res.entry_timestamp) {
+         res['valid_token'] = true;
+         res['btn_primary_if_member_visit'] = 'btn-primary';
+         res['entry_timestamp'] = moment(new Date(res.entry_timestamp * 1000)).format("HH:mm");
+      } else {
+         res['btn_primary_if_member_visit'] = 'btn-secondary';
+      }
+
+      if (res.free_friend_timestamp) {
+         res['free_friend_timestamp'] = moment(new Date(res.free_friend_timestamp * 1000)).format("DD MMMM YYYY");
+         res['btn_primary_if_free_friend'] = 'btn-primary';
+      } else {
+         res['btn_primary_if_free_friend'] = 'btn-secondary';
+      }
+
+      res['random_seed'] = Math.random();
+
       nunjucks.render('member-details.html', res, function(err, html) {
          $("#placeholder").html(html);
          var elem = $("#" + res.subscription_type);
@@ -430,24 +478,28 @@ function filter_visitors()
    update_visitor_list($("#filter-visitor-text")[0].value);
 }
 
-function daypass_change(button, no)
+function daypass_toggle(button, no)
 {
-   connection.session.call('com.daypass.change', [no, global_status.gym_id]).then(function(res) {
+   $(button).attr("disabled", true);
+   connection.session.call("com.daypass.change", [no, global_status.gym_id]).then(function(res) {
+        show_member_details(no);
    }, show_error);
-   if ($(button).text() == "day pass")
-      $(button).text("cancel day pass");
-   else
-      $(button).text("day pass");
 }
 
-function member_visit_change(button, no)
+function free_friend_toggle(button, no)
 {
-   connection.session.call('com.visit.change', [no, global_status.gym_id]).then(function(res) {
+   $(button).attr("disabled", true);
+   connection.session.call("com.freepass.change", [no, global_status.gym_id]).then(function (res) {
+      show_member_details(no);
    }, show_error);
-   if ($(button).text() == "member visit")
-      $(button).text("cancel member visit");
-   else
-      $(button).text("member visit");   
+}
+
+function visit_toggle(button, no)
+{
+   $(button).attr("disabled", true);
+   connection.session.call("com.visit.change", [no, global_status.gym_id]).then(function (res) {
+      show_member_details(no);
+   }, show_error);
 }
 
 function league_change(button, no)
@@ -547,13 +599,13 @@ function initialize_visitor_list()
    update_visitor_list("");
 }
 
-function add_member_async()
+function add_member_async(no)
 {
    connection.session.call('com.tokens.add',
-       [global_status.member_id, global_status.token_id]).then(
+       [no, global_status.token_id]).then(
        function (res) {
-         $("#member_add_list").html("Member " + global_status.member_name +
-            " successfully added!");
+          show_member_details(no);
+          $("#add-member-modal").modal("hide");
        }, show_error
    );
    return false;
@@ -757,7 +809,7 @@ connection.onopen = function (session, details) {
       function (sub) {
       }, show_error
    );
-   session.subscribe('com.transaction.notify', update_transactions)
+   session.subscribe('com.transaction.notify', update_transactions);
    session.subscribe('com.vouchers.scan', update_voucher).then(
       function (sub) {}, show_error
    );
@@ -771,6 +823,7 @@ connection.onopen = function (session, details) {
    healthcheck_interval = setInterval(healthcheck_update, 1000);
 
    global_status.gym_id = parse_cookie().gym_id;
+   $("#gym_id_placeholder").html(["Paarden Eiland", "Diep Rivier", "No gym"][global_status.gym_id]);
 };
 
 
