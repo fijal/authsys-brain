@@ -360,7 +360,6 @@ function show_member_details(no, extra_callback)
       }
 
       if (res.entry_timestamp) {
-         res['valid_token'] = true;
          res['btn_primary_if_member_visit'] = 'btn-primary';
          res['entry_timestamp'] = moment(new Date(res.entry_timestamp * 1000)).format("HH:mm");
       } else {
