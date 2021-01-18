@@ -1,0 +1,67 @@
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <button onclick="show_statistics(0)" class="btn {{ btn_primary_if_pe }}">Paarden Eiland</button>
+            <button onclick="show_statistics(1)" class="btn {{ btn_primary_if_dr }}">Diep River</button>
+            <button onclick="show_statistics()" class="btn {{ btn_primary_if_combined }}">Combined</button>
+        </div>
+    </div>
+    <div class="row margin-top">
+        <div class="col-12">
+            <div class="container">
+                <div class="row">
+                    <div class="col-3">
+                        Date
+                    </div>
+                    <div class="col-3">
+                        Daily passes
+                    </div>
+                    <div class="col-3">
+                        Member visits
+                    </div>
+                    <div class="col-3">
+                        Total
+                    </div>
+                </div>
+                <hr/>
+                {% for visits in visits %}
+                <div class="row">
+                    <div class="col-3">
+                        {{ visits[0] }}
+                    </div>
+                    <div class="col-3">
+                        {{ visits[1]['dailies'] }}
+                    </div>
+                    <div class="col-3">
+                        {{ visits[1]['members'] }}
+                    </div>
+                    <div class="col-3">
+                        {{ visits[1]['dailies'] + visits[1]['members'] }}
+                    </div>
+                </div>
+                {% endfor %}
+                <hr/>
+            </div>
+        </div>
+    </div>
+    <div class="row margin-top">
+        <div class="col-12">
+            Valid pay-as-you-go members: {{ total_ondemand }}
+        </div>
+    </div>
+    <div class="row margin-top">
+        <div class="col-12">
+            Valid recurring members: {{ total_recurring }}
+        </div>
+    </div>
+    <div class="row margin-top">
+        <div class="col-12">
+            Valid perpetual members: {{ total_perpetual }}
+        </div>
+    </div>
+    <div class="row margin-top">
+        <div class="col-12">
+            Number of people who crossed the dorr: {{ total_visitors }}
+        </div>
+    </div>
+</div>
