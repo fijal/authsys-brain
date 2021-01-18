@@ -309,14 +309,35 @@ function pause_change(no, start, end)
    }, show_error);   
 }
 
-function show_statistics()
+function show_statistics(gym_id)
 {
    connection.session.call('com.stats.get').then(function (res) {
-      $("#statistics").html("<p>Valid pay-as-you go members: " + res.total_ondemand + "</p>" +
-         "<p>Valid recurring members: " + res.total_recurring + "</p>" +
-         "<p>Total perpetual members: " + res.total_perpetual + "</p>" +
-         "<p>Number of people who crossed the door: " + res.total_visitors + "</p>" +
-         "<p></p>")
+      var d = []
+      for (var i in res.visits) {
+         var vis_res;
+         if (gym_id === undefined)
+            vis_res = {'dailies': res.visits[i][0]['dailies'] + res.visits[i][1]['dailies'],
+                       'members': res.visits[i][0]['members'] + res.visits[i][1]['members']};
+         else
+            vis_res = res.visits[i][gym_id];
+         d[d.length] = [moment(new Date(i * 1000)).format("DD MMMM YYYY"), vis_res];
+      }
+      d.sort();
+      res.visits = d;
+      stats = res;
+      res['btn_primary_if_pe'] = 'btn-secondary';
+      res['btn_primary_if_dr'] = 'btn-secondary';
+      res['btn_primary_if_combined'] = 'btn-secondary';
+      if (gym_id === undefined) {
+         res['btn_primary_if_combined'] = 'btn-primary';
+      } else if (gym_id == 0) {
+         res['btn_primary_if_pe'] = 'btn-primary';
+      } else if (gym_id == 1) {
+         res['btn_primary_if_dr'] = 'btn-primary';
+      }
+      nunjucks.render("stats.html", res, function (err, r) {
+         $("#statistics").html(r);
+      });
    });
 }
 
