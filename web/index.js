@@ -222,7 +222,6 @@ function addMonths (date, count) {
 function refresh_transaction_history(no)
 {
    connection.session.call('com.payments.get_history', [no]).then(function (res) {
-      console.log(res);
       if (!$("#list-of-operations")[0])
          return;
       var r = "<table class='res-table'><tr><td>Time:</td><td>Type:</td><td>Outcome:</td><td>Value:</td></tr>";
@@ -249,9 +248,10 @@ function refresh_transaction_history(no)
    });
 }
 
-function take_picture(member_id)
+function take_picture(member_id, for_id)
 {
    $.post("/signup/notify_picture", {'gym_id': global_status.gym_id,
+                                     'for_id': for_id,
                                      'member_id': member_id});
    $.post('/signup/poll_main', {'gym_id': global_status.gym_id}).then(
       update_transactions, show_error
@@ -363,6 +363,7 @@ function show_member_details(no, extra_callback)
       res.start = moment(new Date(res.start_timestamp * 1000)).format("DD MMMM YYYY");
       res.next_charge_price = "R" + res.price;
       global_status.member_id = res.member_id;
+      global_status.current_member_data = res;
       global_status.visitor_form = false;
       res.next_charge_date = moment(new Date(res.subscription_ends * 1000)).format("DD MMMM YYYY");
       if (res.last_subscr_ended)
@@ -393,8 +394,25 @@ function show_member_details(no, extra_callback)
       } else {
          res['btn_primary_if_free_friend'] = 'btn-secondary';
       }
+      if (res.debit_order_signup_timestamp) {
+         res['btn_success_if_signed'] = 'btn-success';
+         res['debit_order_signup_timestamp'] = 'Signed mandate: ' + moment(new Date(res.debit_order_signup_timestamp * 1000)).format("DD MM YYYY HH:mm");
+      } else {
+         res['btn_success_if_signed'] = 'btn-secondary';
+         res['debit_order_signup_timestamp'] = 'Sign mandate';
+      }
 
       res['random_seed'] = Math.random();
+
+      if (res.last_id_checked)
+         res.last_id_checked = moment(new Date(res.last_id_checked * 1000)).format("DD MMMM YYYY");
+      if (res.last_id_update)
+         res.last_id_update = moment(new Date(res.last_id_update * 1000)).format("DD MMMM YYYY");
+
+      if (res.failed_checks != []) {
+         for (var i = 0; i < res.failed_checks.length; i++)
+            res.failed_checks[i] = moment(new Date(res.failed_checks[i] * 1000)).format("DD/MM/YY");
+      }
 
       nunjucks.render('member-details.html', res, function(err, html) {
          $("#placeholder").html(html);
@@ -433,6 +451,14 @@ function show_member_details(no, extra_callback)
          }
    });
    }, show_error);
+}
+
+function sign_mandate(button, member_id)
+{
+   $(button).attr("disabled", true);
+   connection.session.call('com.mandate.toggle', [member_id]).then(
+      function (r) { show_member_details(member_id); }, show_error
+   );
 }
 
 function sign_covid_indemnity(member_id, sign)
@@ -512,6 +538,22 @@ function free_friend_toggle(button, no)
    connection.session.call("com.freepass.change", [no, global_status.gym_id]).then(function (res) {
       show_member_details(no);
    }, show_error);
+}
+
+function checked_id(button, no)
+{
+   $(button).attr("disabled", true);
+   connection.session.call("com.members.id_check", [no, true]).then(function (res) {
+      show_member_details(no);
+   });
+}
+
+function failed_to_check_id(button, no)
+{
+   $(button).attr("disabled", true);
+   connection.session.call("com.members.id_check", [no, false]).then(function (res) {
+      show_member_details(no);
+   });
 }
 
 function visit_toggle(button, no)
@@ -636,9 +678,56 @@ function update_transactions()
    show_member_details(global_status.member_id);
 }
 
-function print_mandate()
+function print_mandate(button, member_id, sub_type)
 {
-   connection.session.call("com.mandate.print", [global_status.member_id]);
+   var memb = global_status.current_member_data;
+   // do a few checks
+   if (!memb.photo_present || !memb.last_id_update) {
+      $("#sign-mandate-error").show();
+      $("#print-mandate-really").attr("disabled", true);
+      $("#sign-mandate-success").hide();
+      $("#sign-mandate-modal").modal("show");
+      return;
+   }
+   $("#sign-mandate-error").hide();
+   nunjucks.render('mandate-details.html', {}, function(err, html) {
+      $("#print-mandate-really").attr("disabled", false);
+      $("#sign-mandate-success").html(html);
+      $("#sign-mandate-success").show();
+      $("#sign-mandate-modal").modal("show");
+      update_pricing_for_debit_order();
+   }, show_error);
+}
+
+function update_pricing_for_debit_order()
+{
+   var charge_day = parseInt($("input:radio:checked").val(), 10);
+   var days_in_current_month = global_status.current_member_data.days_in_current_month;
+   var days_till_month_end = global_status.current_member_data.days_till_month_end;
+   var day = (new Date()).getDate();
+   var now = new Date();
+   var price = global_status.prices[global_status.current_member_data.subscription_type] * 1.0;
+   var price_per_day = price / days_in_current_month;
+   var charge_date = new Date(now.getFullYear(), now.getMonth(), charge_day);
+   var first_charge;
+   if (charge_day <= day) {
+      charge_date = addMonths(charge_date, 1);
+      first_charge = price_per_day * days_till_month_end + price;
+   } else {
+      first_charge = price_per_day * days_till_month_end;
+   }
+   var second_charge_date = addMonths(charge_date, 1);
+   $("#debit-order-first-charge-date").html(moment(charge_date).format("DD MMMM YYYY"));
+   $("#debit-order-first-charge").html("R" + first_charge.toFixed(2));
+   $("#debit-order-price").html("R" + price.toFixed(2));
+   $("#debit-order-second-charge").html(moment(second_charge_date).format("DD MMMM YYYY"));
+}
+
+function print_mandate_really()
+{
+   var charge_day = $(".radio-right-margin:checked").val();
+   window.open('/signup/mandate?member_id=' + global_status.member_id + '&price=' +
+      global_status.prices[global_status.current_member_data.subscription_type] + "&charge_day=" + charge_day);
 }
 
 function update_entries()

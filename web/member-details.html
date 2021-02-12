@@ -13,13 +13,13 @@
     <div class="container">
       <div class="row">
         <div class="col-6">
-          <img width=300 src="/signup/get_photo?member_id={{ member_id }}&seed={{ random_seed }}"/>
+          <img width=300 src="/signup/get_photo?member_id={{ member_id }}&tp=photo&seed={{ random_seed }}"/>
         </div>
         <div class="col-6">
           <div class="container">
             <div class="row">
               <div class="col-12">
-                <button onclick="take_picture({{ member_id }})" class="btn btn-secondary" type="button">Take picture</button>
+                <button onclick="take_picture({{ member_id }}, false)" class="btn btn-secondary" type="button">Take picture</button>
               </div>
             </div>
             <div class="row margin-top">
@@ -60,6 +60,52 @@
     <div class="container">
       <div class="row">
         <div class="col-6">
+          <img width=300 src="/signup/get_photo?member_id={{ member_id }}&tp=id_photo&seed={{ random_seed }}"/>
+        </div>
+        <div class="col-6">
+          <div class="container">
+            <div class="row">
+              <div class="col-12">
+                <button onclick="take_picture({{ member_id }}, true)" class="btn btn-secondary" type="button">Take ID picture</button>
+              </div>
+            </div>
+            <div class="row margin-top">
+              <div class="col-12">
+                Last updated: {{ last_id_update }}
+              </div>
+            </div>
+            <div class="row maring-top">
+              <div class="col-12">
+                Last checked: {{ last_id_checked }}
+              </div>
+            </div>
+            <div class="row margin-top">
+              <div class="col-12">
+                Failed checks:
+                {% for res in failed_checks %}
+                   {{ res }},
+                {% endfor %}
+              </div>
+            </div>
+            <div class="row margin-top">
+              <div class="col-12">
+                <button class="btn btn-secondary" type="button" onclick="checked_id(this, {{ member_id }})">Checked</button>
+              </div>
+            </div>
+            <div class="row margin-top">
+              <div class="col-12">
+                <button class="btn btn-secondary" onclick="failed_to_check_id(this, {{ member_id }})" type="button">Failed to check</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class='member-item'>
+    <div class="container">
+      <div class="row">
+        <div class="col-6">
           Signed up: {{ start }}
         </div>
         <div class="col-3">
@@ -82,7 +128,7 @@
           {% else %}
              class="btn btn-secondary"
           {% endif %} onclick='change_membership({{ member_id }}, "none")'> No membership</button>
-          <button disabled type='button' onclick='change_membership({{ member_id }}, "recurring")'
+          <button type='button' onclick='change_membership({{ member_id }}, "recurring")'
           {% if member_type == "recurring" %}
              class="btn btn-primary"
           {% else %}
@@ -141,11 +187,11 @@
         <div class="col-3">
          <button type="button" id="initiate-payment-button" class="btn btn-block btn-success" onclick="initiate_ipad_transaction({{ member_id }}, '{{ name }}', '{{ phone }}', '{{ subscription_type }}', {{ price }}, {{ next_monday }})">Capture bank account details</button>
         </div>
-        <div class="col-3">
-          <button type="button" {{ disableifnobankdetails }} onclick="print_mandate()" id="print-mandate-button" class="btn btn-block btn-success">Print mandate</button>
+        <div class="col-2">
+          <button type="button" {{ disableifnobankdetails }} onclick="print_mandate(this, {{ member_id }}, '{{ subscription_type }}')" id="print-mandate-button" class="btn btn-block btn-success">Print mandate</button>
         </div>
-        <div class="col-3">
-          <button type="button" {{ disableifnobankdetails }} onclick="sign_mandate()" id="mark-mandate-signed" class="btn btn-block btn-success">Signed mandate</button>
+        <div class="col-4">
+          <button type="button" {{ disableifnobankdetails }} onclick="sign_mandate(this, {{ member_id }})" id="mark-mandate-signed" class="btn btn-block {{ btn_success_if_signed }}">{{ debit_order_signup_timestamp }} </button>
         </div>
       </div>
       <div class="row">

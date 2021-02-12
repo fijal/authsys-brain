@@ -20,9 +20,10 @@ from autobahn.twisted.util import sleep
 from autobahn.wamp import auth
 from autobahn.twisted.wamp import ApplicationSession
 from autobahn.wamp.exception import ApplicationError
-from authsys_common.model import meta, members, entries, tokens, vouchers, covid_indemnity, transactions
+from authsys_common.model import meta, members, entries, tokens, vouchers, covid_indemnity, transactions, failed_checks
 from authsys_common import queries as q
 from authsys_common.scripts import get_db_url, get_config
+from authsys_common.mandate import create_mandate
 
 eng = create_engine(get_db_url())
 con = eng.connect()
@@ -191,6 +192,28 @@ class AppSession(ApplicationSession):
     def invalidate_voucher(self, no):
         con.execute(vouchers.update().where(vouchers.c.unique_id == no).values(used = True))
 
+    def toggle_bank_mandate(self, no):
+        l = list(con.execute(select([members.c.debit_order_signup_timestamp]).where(members.c.id == no)))
+        if l[0][0]:
+            val = 0
+            tp = 'mandate'
+            description = 'unsign mandate'
+        else:
+            val = int(time.time())
+            tp = 'mandate'
+            description = 'sign mandate'
+        con.execute(transactions.insert().values({
+            'member_id': no,
+            'timestamp': int(time.time()),
+            'price': 0,
+            'type': tp,
+            'description': description,
+            'outcome': 'ok'
+            }))
+        con.execute(members.update().values(debit_order_signup_timestamp=val).where(
+            members.c.id == no))
+        return {'success': True}
+
     def covid_indemnity_sign(self, member_id, sign):
         if sign:
             con.execute(covid_indemnity.insert({'timestamp': int(time.time()),
@@ -208,6 +231,13 @@ class AppSession(ApplicationSession):
             'description': "Capture bank data",
             'outcome': 'pending'
         }))
+        return {'success': True}
+
+    def check_id(self, no, success):
+        if success:
+            con.execute(members.update().values(last_id_checked=int(time.time())).where(members.c.id == no))
+        else:
+            con.execute(failed_checks.insert().values(member_id=no, timestamp=int(time.time())))
         return {'success': True}
 
     def onConnect(self):
@@ -276,7 +306,9 @@ class AppSession(ApplicationSession):
         yield self.register(self.invalidate_voucher, u'com.vouchers.invalidate')
         yield self.register(self.covid_indemnity_sign, u'com.covid_indemnity.sign')
         yield self.register(self.transaction_start, u'com.transaction.start')
+        yield self.register(self.toggle_bank_mandate, u'com.mandate.toggle')
         yield self.register(self.notify, u'com.notify')
+        yield self.register(self.check_id, u'com.members.id_check')
 
         #self.log.info("procedure add2() registered")
 

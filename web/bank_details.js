@@ -84,7 +84,7 @@ function save_bank_data()
     }
     $.get(`/signup/check_bank_account?account_type=${account_type}&branch_code=${branch_code}&account_number=${account_number}`, function(arg) {
         arg = JSON.parse(arg);
-        if (arg.status == "Valid") {
+        if (arg.success == "ok") {
             $("#submit-button")[0].onclick = undefined;
             $("#submit-button").click();
             // success
@@ -127,4 +127,7 @@ $(document).ready(function () {
       $('#bank-account-input').removeClass('error');
       $("#error").removeClass('show');
     })
+
+    $("#gym_id").val(urlParams.get('gym_id'));
+
 });

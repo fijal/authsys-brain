@@ -1,7 +1,8 @@
 
-import main, base64, py, os, time, json
+import main, base64, py, os, time, json, traceback
 from authsys_common.scripts import get_db_url, get_config
 from authsys_common.model import members, daily_passes
+from authsys_common.mandate import create_mandate
 from authsys_common import queries as q
 
 from sqlalchemy import select, func
@@ -9,12 +10,17 @@ from sqlalchemy import select, func
 from txrestapi.resource import APIResource
 from txrestapi import methods
 
+from netcash.client import Netcash
+
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.web.server import NOT_DONE_YET
 from twisted.internet import reactor
 
 import treq
 # 62617379690
+
+conf = get_config()
+netcash = Netcash(conf.get('payment', 'netcash_merchant_id'), conf.get('payment', 'netcash_ISV'))
 
 banks = {
    'absa bank': ('Absa Bank', 632005),
@@ -47,6 +53,11 @@ banks = {
    'unibank': ('Unibank', 790005),
    'vbs mutual bank': ('Vbs Mutual Bank', 588000)
 }
+
+branch_code_lookup = {}
+
+for bank, branch_code in banks.itervalues():
+    branch_code_lookup[branch_code] = bank
 
 
 class CurrentRequestData(object):
@@ -122,10 +133,12 @@ class SignupManager(APIResource):
     def upload_photo(self, request):
         d = request.content.read()
         args = {}
-        l = request.uri.split("?")[1].split("=")
-        for i in range(0, len(l), 2):
-            args[l[i]] = l[i + 1]
+        l = request.uri.split("?")[1].split("&")
+        for item in l:
+            k, v = item.split("=")
+            args[k] = v
         member_id = args['member_id']
+        what_for = args['what_for']
         prefix = "data:image/png;base64,"
         assert d.startswith(prefix)
         store_dir = get_config().get('data', 'store_dir')
@@ -143,15 +156,22 @@ class SignupManager(APIResource):
             d += "=" * (4 - (len(d) % 4))
         with open(fname, "w") as f:
             f.write(base64.b64decode(d, " /"))
-        print(member_id, fname)
+        if what_for == 'yourself':
+            d = {'photo': fname}
+        else:
+            d = {'id_photo': fname, 'last_id_update': int(time.time()), 'last_id_checked': int(time.time())}
         main.con.execute(members.update().where(members.c.id == member_id).values(
-            photo=fname))
-        return json.dumps({'success': True, 'filename': fname, 'member_id': member_id})
+            **d))
+        return json.dumps({'success': True, 'filename': fname, 'what_for': what_for, 'member_id': member_id})
 
     @methods.GET('^/signup/get_photo')
     def get_photo(self, request):
         member_id = request.args['member_id'][0]
-        lst = list(main.con.execute(select([members.c.photo]).where(members.c.id == member_id)))
+        tp = request.args['tp'][0]
+        if tp == 'photo':
+            lst = list(main.con.execute(select([members.c.photo]).where(members.c.id == member_id)))
+        else:
+            lst = list(main.con.execute(select([members.c.id_photo]).where(members.c.id == member_id)))            
         if lst[0][0] is None:
             return ''
         with open(lst[0][0]) as f:
@@ -171,7 +191,12 @@ class SignupManager(APIResource):
     def notify_picture(self, request):
         gym_id = request.args['gym_id'][0]
         member_id = request.args['member_id'][0]
-        current_request_data.notify(gym_id=gym_id, member_id=member_id, type='photo')
+        for_id = request.args['for_id'][0]
+        if for_id == 'true':
+            what_for = "your ID"
+        else:
+            what_for = "yourself"
+        current_request_data.notify(gym_id=gym_id, member_id=member_id, what_for=what_for, type='photo')
         return json.dumps({'success': True})
 
     @methods.POST('^/signup/notify')
@@ -187,20 +212,32 @@ class SignupManager(APIResource):
 
     @methods.GET('^/signup/check_bank_account')
     def check_bank_account(self, request):
-        def cont2(r):
-            request.write(json.dumps(r))
-            request.finish()
 
         def cont1(r):
-            d = r.json()
-            d.addCallback(cont2)
+            if r:
+                request.write(json.dumps({'success': 'ok'}))
+            else:
+                request.write(json.dumps({'success': 'error'}))
+            request.finish()
+
+        def show_error(fail):
+            traceback.print_tb(fail.tb)
+            print(fail.value)
 
         account_type = request.args['account_type'][0]
         branch_code = request.args['branch_code'][0]
         account_number = request.args['account_number'][0]
-        d = treq.get('https://freecdv.co.za/check/%s/%s/%s' % (account_type, branch_code, account_number))
+        conf = get_config()
+        d = netcash.validate_bank_account(conf.get('payment', 'netcash_service_key'), branch_code, int(account_number))
         d.addCallback(cont1)
+        d.addErrback(show_error)
         return NOT_DONE_YET
+        #request.write()
+        #return
+        #d = treq.get('https://freecdv.co.za/check/%s/%s/%s' % (account_type, branch_code, account_number))
+        #d.addCallback(cont1)
+        #print("not done yet")
+        #return NOT_DONE_YET
 
     @methods.POST('^/signup/submit_bank_details')
     def bank_account_update(self, request):
@@ -215,13 +252,43 @@ class SignupManager(APIResource):
         q.update_account_number(main.con, id, name, price, contact_number, address, branch_code, account_number)
         treq.request("POST", url, headers={"Content-Type": "application/json"}, json={"procedure": "com.notify"})
         # generate a PDF in a separate thread with all the information
-        return py.path.local(__file__).join('..', 'web', 'thankyou-bank.html').read()
+        return py.path.local(__file__).join('..', 'web', 'thankyou-bank.html').read().replace(
+            '{{gym_id}}', request.args['gym_id'][0])
 
     @methods.GET('^/signup/thankyou_photo')
     def thankyou_photo(self, request):
         request_submitted_data.notify(gym_id=request.args['gym_id'][0], type='photo')
         return py.path.local(__file__).join('..', 'web', 'thankyou_photo.html').read().replace(
             '{{who}}', request.args['name'][0]).replace('{{gym_id}}', request.args['gym_id'][0])
+
+    @methods.GET('^/signup/mandate')
+    def get_mandate(self, request):
+        request.responseHeaders.addRawHeader('content-type', 'application/pdf')
+        member_id = int(request.args['member_id'][0])
+        charge_day = int(request.args['charge_day'][0])
+        price = int(request.args['price'][0])
+        name, address, branch_code, account_no, phone = list(main.con.execute(select([members.c.name,
+            members.c.address, members.c.branch_code, members.c.account_number, members.c.phone]).where(
+            members.c.id == member_id)))[0]
+        bank = branch_code_lookup[int(branch_code)]
+        if branch_code == "198765" or branch_code == "720026":
+            if account_no[0] == "1":
+                branch_code = "198765"
+            elif accont_no[0] == "2":
+                branch_code = "198765"
+                account_type = "2"
+            elif account_no[0] == "9":
+                branch_code = "720026"
+                account_type = "2"
+        elif branch_code == "460005":
+            account_type = "2"
+        else:
+            account_type = "1"
+
+        return create_mandate(charge_day=charge_day,
+            member_id=member_id, name=name, address=address, account_number=account_no,
+            bank=bank, branch_code=branch_code, account_type=account_type, price=price, phone=phone
+            )
 
     @methods.POST('^/signup/upload_signature')
     def upload_signature(self, request):

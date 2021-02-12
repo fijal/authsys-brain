@@ -179,6 +179,28 @@
             </div>
          </div>
       </div>
+      <div class="modal" role="dialog" id="sign-mandate-modal">
+         <div class="modal-dialog">
+            <div class="modal-content">
+               <div class="modal-header">
+                  <h3>Print mandate for a member</h3>
+               </div>
+               <div class="modal-body">
+                  <div id="sign-mandate-error" style="display: none">
+                     <p>Some items are missing, make sure:</p>
+                     <p>- photo is present</p>
+                     <p>- ID photo is present and recent</p>
+                  </div>
+                  <div id="sign-mandate-success" style="display: none">
+                  </div>
+               </div>
+               <div class="modal-footer">
+                  <button id="print-mandate-really" data-dismiss="modal" onclick="print_mandate_really()" type="button" class="btn btn-danger">Print</button>
+                  <button data-dismiss="modal" type="button" class="btn btn-secondary">Close</button>
+               </div>
+            </div>
+         </div>
+      </div>
       <!-- <script>AUTOBAHN_DEBUG = true;</script> -->
       <script src="autobahn.min.js"></script>
       <script src="jquery-3.1.1.min.js"></script>

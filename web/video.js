@@ -14,7 +14,11 @@ function startup() {
     canvas = document.getElementById('pic-capture-canvas');
     photo = document.getElementById('photo');
     startbutton = document.getElementById('startbutton');
-    gym_id = new URLSearchParams(window.location.search).get("gym_id");
+    var url_search_params = new URLSearchParams(window.location.search);
+    gym_id = url_search_params.get("gym_id");
+    $("#what-for").html(url_search_params.get("what_for"));
+    $("#what-for-2").html(url_search_params.get("what_for"));
+
 
     // access video stream from webcam
     navigator.mediaDevices.getUserMedia({
@@ -70,8 +74,9 @@ function save_picture() {
     var data = canvas.toDataURL('image/png');
     var url_search_params = new URLSearchParams(window.location.search)
     var member_id = url_search_params.get("member_id");
+    var what_for = url_search_params.get('what_for');
     var name = url_search_params.get('name');
-    $.post("/signup/photo?member_id=" + member_id, data, function (res) {
+    $.post("/signup/photo?member_id=" + member_id + "&what_for=" + what_for, data, function (res) {
         window.location = '/signup/thankyou_photo?gym_id=' + gym_id + '&name=' + name;
     });
 }

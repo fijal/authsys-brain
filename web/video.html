@@ -17,7 +17,7 @@
 <body>
     <div class="container">
       <div class="row">
-        <div class="col-12 text-center"><b>Please select a good picture of yourself</b></div>
+        <div class="col-12 text-center"><b>Please select a good picture of <span style="font-size: 30px; color: red" id="what-for"></span></b></div>
       </div>
       <div id="video-stream"  class="row margin-top text-center">
         <div class="col-12">
@@ -41,7 +41,7 @@
           <button onclick="restart_process()" id="restart-button" class="btn orange-button">Take picture again</button>
         </div>
         <div class="col-6 text-center">
-          <button onclick="save_picture()" id="save-picture-button" class="btn orange-button">Save picture</button>
+          <button onclick="save_picture()" id="save-picture-button" class="btn orange-button">Save picture of <span id="what-for-2"></span></button>
         </div>
       </div>
     </div>
