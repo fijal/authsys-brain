@@ -129,5 +129,5 @@ $(document).ready(function () {
     })
 
     $("#gym_id").val(urlParams.get('gym_id'));
-
+    do_poll("bank details");
 });

@@ -248,6 +248,14 @@ ul {
     color: #DD1111;
 }
 
+.red-text {
+    color: #F00;
+}
+
+.green-text {
+    color: #3C6;
+}
+
 .led-red {
   margin: 0 auto;
   width: 24px;

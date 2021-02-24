@@ -138,10 +138,6 @@ class AppSession(ApplicationSession):
     def league_register(self, no):
         q.league_register(con, no)
 
-    def notify_transaction(self, no, tp):
-        import signup
-        signup.current_request_data.notify(no, tp)
-
     def get_payment_history(self, no):
         memb_data = q.get_member_data(con, no)
         member_type = memb_data['member_type']
@@ -192,7 +188,7 @@ class AppSession(ApplicationSession):
     def invalidate_voucher(self, no):
         con.execute(vouchers.update().where(vouchers.c.unique_id == no).values(used = True))
 
-    def toggle_bank_mandate(self, no):
+    def toggle_bank_mandate(self, no, price, sub_type):
         l = list(con.execute(select([members.c.debit_order_signup_timestamp]).where(members.c.id == no)))
         if l[0][0]:
             val = 0
@@ -212,6 +208,11 @@ class AppSession(ApplicationSession):
             }))
         con.execute(members.update().values(debit_order_signup_timestamp=val).where(
             members.c.id == no))
+        if description == 'sign mandate':
+            x = [x for x, in con.execute(select([members.c.debit_order_charge_day]).where(members.c.id == no))]
+            r = q.add_subscription_and_future_charges(con, no, x[0], int(price), sub_type)
+            if 'error' in r:
+                return r;
         return {'success': True}
 
     def covid_indemnity_sign(self, member_id, sign):
@@ -293,7 +294,6 @@ class AppSession(ApplicationSession):
         yield self.register(self.subscription_change_end, u'com.subscription.change_expiry_date')
         yield self.register(self.change_membership_type, u'com.members.change_membership_type')
         yield self.register(self.change_subscription_type, u'com.members.change_subscription_type')
-        yield self.register(self.notify_transaction, u'com.payments.notify_transaction')
         yield self.register(self.get_payment_history, u'com.payments.get_history')
         yield self.register(self.get_stats, u'com.stats.get')
         yield self.register(self.get_form, u'com.forms.get')

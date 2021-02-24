@@ -19,14 +19,28 @@
 #alter table daily_passes add gym_id integer;
 #alter table free_passes add gym_id integer;
 
-alter table members add last_id_update integer;
-alter table members add last_id_checked integer;
-alter table members add id_photo varchar;
+#alter table members add last_id_update integer;
+#alter table members add last_id_checked integer;
+#alter table members add id_photo varchar;
 
-CREATE TABLE failed_checks (
+#CREATE TABLE failed_checks (
+#    id INTEGER NOT NULL, 
+#    member_id INTEGER, 
+#    timestamp INTEGER, 
+#    PRIMARY KEY (id), 
+#    FOREIGN KEY(member_id) REFERENCES members (id)
+#);
+
+alter table members add debit_order_charge_day integer;
+
+CREATE TABLE pending_transactions (
     id INTEGER NOT NULL, 
     member_id INTEGER, 
     timestamp INTEGER, 
+    creation_timestamp INTEGER, 
+    price INTEGER, 
+    type VARCHAR, 
+    description VARCHAR, 
     PRIMARY KEY (id), 
     FOREIGN KEY(member_id) REFERENCES members (id)
 );

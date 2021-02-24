@@ -30,13 +30,13 @@
                         {{ visits[0] }}
                     </div>
                     <div class="col-3">
-                        {{ visits[1]['dailies'] }}
+                        {{ visits[1]['dailies'] }} ({{ visits[1]['free'] }})
                     </div>
                     <div class="col-3">
                         {{ visits[1]['members'] }}
                     </div>
                     <div class="col-3">
-                        {{ visits[1]['dailies'] + visits[1]['members'] }}
+                        {{ visits[1]['dailies'] + visits[1]['members'] + visits[1]['free'] }}
                     </div>
                 </div>
                 {% endfor %}

@@ -253,10 +253,6 @@ function take_picture(member_id, for_id)
    $.post("/signup/notify_picture", {'gym_id': global_status.gym_id,
                                      'for_id': for_id,
                                      'member_id': member_id});
-   $.post('/signup/poll_main', {'gym_id': global_status.gym_id}).then(
-      update_transactions, show_error
-   );
-
 }
 
 function initiate_ipad_transaction(member_id, name, phone, sub_type, price, next_monday)
@@ -317,7 +313,8 @@ function show_statistics(gym_id)
          var vis_res;
          if (gym_id === undefined)
             vis_res = {'dailies': res.visits[i][0]['dailies'] + res.visits[i][1]['dailies'],
-                       'members': res.visits[i][0]['members'] + res.visits[i][1]['members']};
+                       'members': res.visits[i][0]['members'] + res.visits[i][1]['members'],
+                       'free': res.visits[i][0]['free'] + res.visits[i][1]['free']};
          else
             vis_res = res.visits[i][gym_id];
          d[d.length] = [moment(new Date(i * 1000)).format("DD MMMM YYYY"), vis_res];
@@ -456,8 +453,15 @@ function show_member_details(no, extra_callback)
 function sign_mandate(button, member_id)
 {
    $(button).attr("disabled", true);
-   connection.session.call('com.mandate.toggle', [member_id]).then(
-      function (r) { show_member_details(member_id); }, show_error
+   var price = global_status.prices[global_status.current_member_data.subscription_type];
+   connection.session.call('com.mandate.toggle', [member_id, price, global_status.current_member_data.subscription_type]).then(
+      function (r) { 
+         if (r.error) {
+            show_error(r.error);
+            return;
+         }
+         show_member_details(member_id);
+      }, show_error
    );
 }
 
@@ -699,6 +703,13 @@ function print_mandate(button, member_id, sub_type)
    }, show_error);
 }
 
+function print_mandate_really()
+{
+   var charge_day = $(".radio-right-margin:checked").val();
+   window.open('/signup/mandate?member_id=' + global_status.member_id + '&price=' +
+       global_status.prices[global_status.current_member_data.subscription_type] + "&charge_day=" + charge_day);
+}
+
 function update_pricing_for_debit_order()
 {
    var charge_day = parseInt($("input:radio:checked").val(), 10);
@@ -721,13 +732,6 @@ function update_pricing_for_debit_order()
    $("#debit-order-first-charge").html("R" + first_charge.toFixed(2));
    $("#debit-order-price").html("R" + price.toFixed(2));
    $("#debit-order-second-charge").html(moment(second_charge_date).format("DD MMMM YYYY"));
-}
-
-function print_mandate_really()
-{
-   var charge_day = $(".radio-right-margin:checked").val();
-   window.open('/signup/mandate?member_id=' + global_status.member_id + '&price=' +
-      global_status.prices[global_status.current_member_data.subscription_type] + "&charge_day=" + charge_day);
 }
 
 function update_entries()
@@ -918,6 +922,10 @@ connection.onopen = function (session, details) {
       function (sub) {
       }, show_error
    );
+   session.subscribe('com.photo.update', function (r) {
+      if (r.gym_id != global_status.gym_id || global_status.member_id == undefined)
+         show_member_details(global_status.member_id);
+   });
    session.subscribe('com.transaction.notify', update_transactions);
    session.subscribe('com.vouchers.scan', update_voucher).then(
       function (sub) {}, show_error
@@ -926,12 +934,49 @@ connection.onopen = function (session, details) {
       function (sub) {
       }, show_error);
    session.subscribe('com.payments.update_history', function (r) { refresh_transaction_history(r[0]); });
+
+   session.subscribe('com.ipad.update', function (r) {
+      r = r[0];
+      if (r.gym_id != global_status.gym_id)
+         return;
+      if (r.update == 'lost') {
+         $("#ipad-status-text").html("");
+         $("#ipad-status-icon").removeClass("green-text");
+         $("#ipad-status-text").removeClass("green-text");
+         $("#ipad-status-icon").addClass("red-text");
+         $("#ipad-status-text").addClass("red-text");
+         return;
+      }
+      $("#ipad-status-text").html("&nbsp;" + r.update);
+      $("#ipad-status-icon").removeClass("red-text");
+      $("#ipad-status-icon").addClass("green-text");
+      $("#ipad-status-text").removeClass("red-text");
+      $("#ipad-status-text").addClass("green-text");
+   });
+
    session.call('com.stats.get_prices', []).then(function (r) {
       global_status.prices = r;
    }, show_error);
    healthcheck_interval = setInterval(healthcheck_update, 1000);
 
-   global_status.gym_id = parse_cookie().gym_id;
+   global_status.gym_id = parseInt(parse_cookie().gym_id, 10);
+   session.call('com.ipad.status', [global_status.gym_id]).then(
+      function (r) {
+         if (r.present) {
+            $("#ipad-status-text").html("&nbsp;" + r.origin);
+            $("#ipad-status-icon").removeClass("red-text");
+            $("#ipad-status-icon").addClass("green-text");            
+            $("#ipad-status-text").removeClass("red-text");
+            $("#ipad-status-text").addClass("green-text");            
+         } else {
+            $("#ipad-status-text").html("");
+            $("#ipad-status-icon").removeClass("green-text");
+            $("#ipad-status-icon").addClass("red-text");            
+            $("#ipad-status-text").removeClass("green-text");
+            $("#ipad-status-text").addClass("red-text");            
+         }
+      })
+
    $("#gym_id_placeholder").html(["Paarden Eiland", "Diep Rivier", "No gym"][global_status.gym_id]);
 };
 

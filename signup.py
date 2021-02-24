@@ -12,6 +12,9 @@ from txrestapi import methods
 
 from netcash.client import Netcash
 
+from autobahn.twisted.wamp import ApplicationSession, ApplicationRunner
+from autobahn.wamp import auth
+
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.web.server import NOT_DONE_YET
 from twisted.internet import reactor
@@ -59,22 +62,66 @@ branch_code_lookup = {}
 for bank, branch_code in banks.itervalues():
     branch_code_lookup[branch_code] = bank
 
+def makeConnectionLost(req_data, gym_id, old_lc, node):
+    def connectionLost(self, *args, **kwds):
+        old_lc(self, *args, **kwds)
+        node.publish(u'com.ipad.update', {'gym_id': gym_id, 'update': "lost"})
+        req_data.current_request[gym_id] = None
+    return connectionLost
+
+class Component(ApplicationSession):
+    def __init__(self, signup, *args):
+        self.signup = signup
+        ApplicationSession.__init__(self, *args)
+
+    def get_current_ipad_status(self, gym_id):
+        cr = current_request_data.current_request[gym_id]
+        if cr is None:
+            return {'present': False}
+        return {'present': True, 'origin': cr.origin}
+
+    @inlineCallbacks
+    def onJoin(self, details):
+        self.signup.wamp = self
+        yield self.register(self.get_current_ipad_status, u'com.ipad.status')
+
+    def onConnect(self):
+        self.join(self.config.realm, [u"wampcra"], u"frontdesk")
+
+    def onChallenge(self, challenge):
+        if challenge.method != u'wampcra':
+            raise Exception("invalid auth method " + challenge.method)
+        if u'salt' in challenge.extra:
+            raise Exception("salt unimplemented")
+        return auth.compute_wcs(get_config().get('auth', 'secret'),
+                                challenge.extra['challenge'])
+
+    def onDisconnect(self):
+        print("signup disconnected from session")
+
+class RequestWrapper(object):
+    def __init__(self, origin, req):
+        self.r = req
+        self.origin = origin
 
 class CurrentRequestData(object):
     current_request = [None] * 10
 
-    def update(self, request):
+    def update(self, node, request):
         gym_id = int(request.args['gym_id'][0])
+        origin = request.args['origin'][0]
+        request.connectionLost = makeConnectionLost(self, gym_id, request.connectionLost, node)
+        node.publish(u'com.ipad.update', {'gym_id': gym_id, 'update': origin})
         if self.current_request[gym_id] is not None:
             try:
-                self.current_request[gym_id].write("{}")
-                self.current_request[gym_id].finish()
+                self.current_request[gym_id].r.write("{}")
+                self.current_request[gym_id].r.finish()
             except Exception as e:
                 print("Error occured: " + str(e))
                 # eat all the exceptions here
-        self.current_request[gym_id] = request
+        self.current_request[gym_id] = RequestWrapper(origin, request)
 
-    def notify(self, **kwds):
+    def notify(self, node, **kwds):
         gym_id = int(kwds['gym_id'])
         if self.current_request[gym_id] is None:
             print("No request")
@@ -82,8 +129,9 @@ class CurrentRequestData(object):
         d = kwds.copy()
         d['redirect'] = kwds.get('type')
         try: # maybe the request was stale
-            self.current_request[gym_id].write(json.dumps(d))
-            self.current_request[gym_id].finish()
+            node.publish(u'com.ipad.update', {'gym_id': gym_id, 'update': d['redirect'] + ' in progress'})
+            self.current_request[gym_id].r.write(json.dumps(d))
+            self.current_request[gym_id].r.finish()
         except:
             print("Found stale request, not notifying")
         finally:
@@ -91,12 +139,21 @@ class CurrentRequestData(object):
 
 
 current_request_data = CurrentRequestData()
-request_submitted_data = CurrentRequestData() # polling for the main website
 
 
 class SignupManager(APIResource):
+    wamp = None
+
     def __init__(self, arg):
+        self.create_wamp_connection()
         APIResource.__init__(self)
+
+    def create_wamp_connection(self):
+        if self.wamp is not None:
+            return
+
+        runner = ApplicationRunner(u"ws://127.0.0.1:8087/ws", u"authsys")
+        runner.run(lambda *args: Component(self, *args), start_reactor=False, auto_reconnect=True)
 
     @methods.POST('^/signup/submit$')
     def submit(self, request):
@@ -179,12 +236,8 @@ class SignupManager(APIResource):
 
     @methods.POST('^/signup/poll')
     def poll(self, request):
-        current_request_data.update(request)
-        return NOT_DONE_YET
-
-    @methods.POST('^/signup/poll_main')
-    def poll_main(self, request):
-        request_submitted_data.update(request)
+        self.create_wamp_connection()
+        current_request_data.update(self.wamp, request)
         return NOT_DONE_YET
 
     @methods.POST('^/signup/notify_picture')
@@ -196,14 +249,14 @@ class SignupManager(APIResource):
             what_for = "your ID"
         else:
             what_for = "yourself"
-        current_request_data.notify(gym_id=gym_id, member_id=member_id, what_for=what_for, type='photo')
+        current_request_data.notify(self.wamp, gym_id=gym_id, member_id=member_id, what_for=what_for, type='photo')
         return json.dumps({'success': True})
 
     @methods.POST('^/signup/notify')
     def notify(self, request):
         name = request.args['name'][0]
         contact_no = request.args['contact_number'][0]
-        current_request_data.notify(gym_id=request.args['gym_id'][0], name=name,
+        current_request_data.notify(self.wamp, gym_id=request.args['gym_id'][0], name=name,
             contact_number=contact_no,
             member_id=request.args['member_id'][0], price=request.args['price'][0],
             subscription_type=request.args['subscription_type'][0],
@@ -257,7 +310,7 @@ class SignupManager(APIResource):
 
     @methods.GET('^/signup/thankyou_photo')
     def thankyou_photo(self, request):
-        request_submitted_data.notify(gym_id=request.args['gym_id'][0], type='photo')
+        self.wamp.publish(u'com.photo.update', [request.args['gym_id'][0]])
         return py.path.local(__file__).join('..', 'web', 'thankyou_photo.html').read().replace(
             '{{who}}', request.args['name'][0]).replace('{{gym_id}}', request.args['gym_id'][0])
 
@@ -270,11 +323,12 @@ class SignupManager(APIResource):
         name, address, branch_code, account_no, phone = list(main.con.execute(select([members.c.name,
             members.c.address, members.c.branch_code, members.c.account_number, members.c.phone]).where(
             members.c.id == member_id)))[0]
+        main.con.execute(members.update().values(debit_order_charge_day=charge_day).where(members.c.id == member_id))
         bank = branch_code_lookup[int(branch_code)]
         if branch_code == "198765" or branch_code == "720026":
             if account_no[0] == "1":
                 branch_code = "198765"
-            elif accont_no[0] == "2":
+            elif account_no[0] == "2":
                 branch_code = "198765"
                 account_type = "2"
             elif account_no[0] == "9":

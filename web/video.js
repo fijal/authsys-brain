@@ -16,8 +16,10 @@ function startup() {
     startbutton = document.getElementById('startbutton');
     var url_search_params = new URLSearchParams(window.location.search);
     gym_id = url_search_params.get("gym_id");
-    $("#what-for").html(url_search_params.get("what_for"));
-    $("#what-for-2").html(url_search_params.get("what_for"));
+    var what_for = url_search_params.get("what_for");
+    $("#what-for").html(what_for);
+    $("#what-for-2").html(what_for);
+    do_poll("photo " + what_for);
 
 
     // access video stream from webcam
