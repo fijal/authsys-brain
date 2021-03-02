@@ -319,7 +319,7 @@ class SignupManager(APIResource):
         request.responseHeaders.addRawHeader('content-type', 'application/pdf')
         member_id = int(request.args['member_id'][0])
         charge_day = int(request.args['charge_day'][0])
-        price = int(request.args['price'][0])
+        price = int(float(request.args['price'][0]))
         name, address, branch_code, account_no, phone = list(main.con.execute(select([members.c.name,
             members.c.address, members.c.branch_code, members.c.account_number, members.c.phone]).where(
             members.c.id == member_id)))[0]
