@@ -210,7 +210,7 @@ class AppSession(ApplicationSession):
             members.c.id == no))
         if description == 'sign mandate':
             x = [x for x, in con.execute(select([members.c.debit_order_charge_day]).where(members.c.id == no))]
-            r = q.add_subscription_and_future_charges(con, no, x[0], int(price), sub_type)
+            r = q.add_subscription_and_future_charges(con, no, x[0], int(float(price)), sub_type)
             if 'error' in r:
                 return r;
         return {'success': True}
