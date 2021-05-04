@@ -320,7 +320,7 @@ class SignupManager(APIResource):
         member_id = int(request.args['member_id'][0])
         charge_day = int(request.args['charge_day'][0])
         price = int(float(request.args['price'][0]))
-        name, address, branch_code, account_no, phone = list(main.con.execute(select([members.c.name,
+        name, address, branch_code, account_no, phone = list(main.con.execute(select([members.c.account_holder_name,
             members.c.address, members.c.branch_code, members.c.account_number, members.c.phone]).where(
             members.c.id == member_id)))[0]
         main.con.execute(members.update().values(debit_order_charge_day=charge_day).where(members.c.id == member_id))
@@ -328,6 +328,7 @@ class SignupManager(APIResource):
         if branch_code == "198765" or branch_code == "720026":
             if account_no[0] == "1":
                 branch_code = "198765"
+                account_type = "1"
             elif account_no[0] == "2":
                 branch_code = "198765"
                 account_type = "2"

@@ -756,13 +756,14 @@ function update_entries()
          cls = "red";
          reason = "unknown token";
       } else {
+         var day = entry_time.getDay();
 	      if (elem.member_type == 'perpetual') {
 	          cls = 'green';
 	          reason = '';
 	      } else if (elem.subscription_end_timestamp == null || elem.subscription_end_timestamp < elem.timestamp) {
             cls = "red";
             reason = "no valid subscription";
-         } else if (elem.sub_type == "before4" && entry_time.getHours() >= 16) {
+         } else if (elem.sub_type == "before4" && entry_time.getHours() >= 16 && (day != 0) && (day != 6)) {
             cls = "red";
             reason = "entry after 4pm";
          } else if (new Date(elem.subscription_end_timestamp * 1000) - entry_time < 3600 * 24 * 1000) {
