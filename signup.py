@@ -10,8 +10,6 @@ from sqlalchemy import select, func
 from txrestapi.resource import APIResource
 from txrestapi import methods
 
-from netcash.client import Netcash
-
 from autobahn.twisted.wamp import ApplicationSession, ApplicationRunner
 from autobahn.wamp import auth
 
@@ -23,7 +21,10 @@ import treq
 # 62617379690
 
 conf = get_config()
-netcash = Netcash(conf.get('payment', 'netcash_merchant_id'), conf.get('payment', 'netcash_ISV'))
+
+DIRECT_BASE_URL = conf.get('payment', 'direct_url')
+DIRECT_PASSWORD = conf.get('payment', 'direct_password')
+DIRECT_USERNAME = conf.get('payment', 'direct_user')
 
 banks = {
    'absa bank': ('Absa Bank', 632005),
@@ -266,8 +267,10 @@ class SignupManager(APIResource):
     @methods.GET('^/signup/check_bank_account')
     def check_bank_account(self, request):
 
+        @inlineCallbacks
         def cont1(r):
-            if r:
+            r = yield r.json()
+            if r['valid']:
                 request.write(json.dumps({'success': 'ok'}))
             else:
                 request.write(json.dumps({'success': 'error'}))
@@ -280,17 +283,11 @@ class SignupManager(APIResource):
         account_type = request.args['account_type'][0]
         branch_code = request.args['branch_code'][0]
         account_number = request.args['account_number'][0]
-        conf = get_config()
-        d = netcash.validate_bank_account(conf.get('payment', 'netcash_service_key'), branch_code, int(account_number))
+        d = treq.get(DIRECT_BASE_URL + 'cdv/account', headers={'Accept': 'application/json'},
+             auth=(DIRECT_USERNAME, DIRECT_PASSWORD), params={'account_number': account_number, 'branch_code': branch_code})
         d.addCallback(cont1)
         d.addErrback(show_error)
         return NOT_DONE_YET
-        #request.write()
-        #return
-        #d = treq.get('https://freecdv.co.za/check/%s/%s/%s' % (account_type, branch_code, account_number))
-        #d.addCallback(cont1)
-        #print("not done yet")
-        #return NOT_DONE_YET
 
     @methods.POST('^/signup/submit_bank_details')
     def bank_account_update(self, request):

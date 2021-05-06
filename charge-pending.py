@@ -41,19 +41,20 @@ twoday = datetime.datetime(2021, 5, 7)
 def t(d):
     return time.mktime(d.timetuple())
 
-lst = [(x, y, a, b, c, d) for x, y, a, b, c, d in con.execute(select(
+lst = [{'pend_id': x, 'member_id': y, 'account_holder_name': a, 'account_number': b, 'branch_code': c, 'price': d}
+       for x, y, a, b, c, d in con.execute(select(
     [pending_transactions.c.id, members.c.id, members.c.account_holder_name, members.c.account_number, members.c.branch_code,
     pending_transactions.c.price]).where(
     and_(and_(pending_transactions.c.timestamp >= t(now.replace(hour=0, minute=0, second=0)),
          pending_transactions.c.timestamp < t(now.replace(hour=23, minute=0, second=0))),
          members.c.id == pending_transactions.c.member_id)))]
 
-#for i, (_, member_id, _, _, _, _) in enumerate(lst):
+for i, (_, member_id, _, _, _, _) in enumerate(lst):
     # sanity check of subscriptions
-#    subs = list(con.execute(select([subscriptions.c.id, subscriptions.c.start_timestamp, subscriptions.c.end_timestamp]).where(
-#        subscriptions.c.member_id == member_id)))
-#    for sub in subs:
-#        _, start_timestamp, end_timestamp = sub
+    subs = list(con.execute(select([subscriptions.c.id, subscriptions.c.start_timestamp, subscriptions.c.end_timestamp]).where(
+        subscriptions.c.member_id == member_id)))
+    for sub in subs:
+        _, start_timestamp, end_timestamp = sub
 
 @inlineCallbacks
 def f(resp):
@@ -73,8 +74,6 @@ def f(resp):
             outcome = 'submitted'
             ))
 
-    # remove the pending_transactions
-    # write into transactions
     # update the subscription validity
     print(r)
     reactor.stop()

@@ -721,7 +721,7 @@ function update_pricing_for_debit_order()
    var price_per_day = price / days_in_current_month;
    var charge_date = new Date(now.getFullYear(), now.getMonth(), charge_day);
    var first_charge;
-   if (charge_day <= day) {
+   if (charge_day <= day + 5) {
       charge_date = addMonths(charge_date, 1);
       first_charge = price_per_day * days_till_month_end + price;
    } else {
