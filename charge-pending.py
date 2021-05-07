@@ -100,7 +100,7 @@ d = treq.post(BASE_URL + 'batch/eft/json', headers={'Accept': 'application/json'
              'action_date': twoday.strftime('%Y-%m-%d'),
              'skip_cdv_check': False,
              'skip_checksum': False,
-             'submit_to_bank': False
+             'submit_to_bank': True
              })
 d.addCallback(f)
 d.addErrback(err)
