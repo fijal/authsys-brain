@@ -109,7 +109,10 @@ class CurrentRequestData(object):
     current_request = [None] * 10
 
     def update(self, node, request):
-        gym_id = int(request.args['gym_id'][0])
+        try:
+            gym_id = int(request.args['gym_id'][0])
+        except KeyError:
+            return # nothing to see here
         origin = request.args['origin'][0]
         request.connectionLost = makeConnectionLost(self, gym_id, request.connectionLost, node)
         node.publish(u'com.ipad.update', {'gym_id': gym_id, 'update': origin})
