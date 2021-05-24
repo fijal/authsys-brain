@@ -80,9 +80,16 @@ function update_member_list(filter)
             var phone = res[i].phone;
             if (phone == null)
                phone = "";
+            var text;
+            console.log(res[i]);
+            if (res[i].last_daypass_timestamp)
+               text = 'cancel day pass';
+            else
+               text = 'day pass';
             r += ("<div class='row'><div class='col'><a href='#' onclick='show_member_details(" + res[i].id + ")'>" + 
                   res[i].name + "</a></div><div class='col'>" + phone + "</div><div class='col'>" + res[i].email +
-                  "</div></div>");
+                  "</div><div class='col'><button onclick='daypass_change(this, " + i + ", " + res[i].id +
+                  ")' class='daypass' type='button'>" + text + "</button></div></div>");
          }
       }
       r += '</div></div></div>'
@@ -526,6 +533,25 @@ function save_user_notes()
 function filter_visitors()
 {
    update_visitor_list($("#filter-visitor-text")[0].value);
+}
+
+function daypass_change(button, i, no)
+{
+   var setting = false;
+   if ($(button).text() == "day pass")
+      setting = true;
+   $(button).attr("disabled", true);
+   connection.session.call('com.daypass.change', [no, global_status.gym_id]).then(function(res) {
+      $(button).attr("disabled", false);
+      if (setting)
+         global_status.member_list[i].last_daypass_timestamp = (new Date()) / 1000;
+      else
+         global_status.member_list[i].last_daypass_timestamp = 0;
+   }, show_error);
+   if ($(button).text() == "day pass")
+      $(button).text("cancel day pass");
+   else
+      $(button).text("day pass");
 }
 
 function daypass_toggle(button, no)
