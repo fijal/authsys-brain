@@ -111,7 +111,7 @@ class CurrentRequestData(object):
     def update(self, node, request):
         try:
             gym_id = int(request.args['gym_id'][0])
-        except KeyError:
+        except (KeyError, ValueError):
             return # nothing to see here
         origin = request.args['origin'][0]
         request.connectionLost = makeConnectionLost(self, gym_id, request.connectionLost, node)
