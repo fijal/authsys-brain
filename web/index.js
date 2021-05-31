@@ -512,6 +512,14 @@ function show_form(no)
    return false;
 }
 
+function filter_members_if_enter(event)
+{
+   console.log(event);
+   if (event.keyCode == 13)
+      return filter_members();
+   return false;
+}
+
 function filter_members()
 {
    update_member_list($("#filter-text")[0].value);
@@ -1004,6 +1012,7 @@ connection.onopen = function (session, details) {
          }
       })
 
+   $("#filter-text").keyup(filter_members_if_enter);
    $("#gym_id_placeholder").html(["Paarden Eiland", "Diep Rivier", "No gym"][global_status.gym_id]);
 };
 
