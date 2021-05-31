@@ -18,7 +18,7 @@ from authsys_common.scripts import get_config, get_db_url
 from debit_orders import add_two_days, list_pending_transactions, convert_to_charge
 
 dry_run = True
-if sys.argv[1] == '--run':
+if len(sys.argv) > 1 and sys.argv[1] == '--run':
     del sys.argv[1]
     dry_run = False
 if len(sys.argv) not in (1, 3):
