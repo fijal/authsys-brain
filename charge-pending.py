@@ -1,6 +1,6 @@
 
 """ Usage:
-AUTHSYS_INI=path-to-ini charge-pending.py [month day]
+AUTHSYS_INI=path-to-ini charge-pending.py [--run] [month day]
 """
 
 import sys, datetime, time, base64
@@ -17,6 +17,10 @@ from authsys_common.model import pending_transactions, members, transactions, su
 from authsys_common.scripts import get_config, get_db_url
 from debit_orders import add_two_days, list_pending_transactions, convert_to_charge
 
+dry_run = True
+if sys.argv[1] == '--run':
+    del sys.argv[1]
+    dry_run = False
 if len(sys.argv) not in (1, 3):
     print(__doc__)
     sys.exit(1)
@@ -73,6 +77,8 @@ for item in pending_charges:
     if item['member_id'] in d:
         epxlode
     item['member_id'] = None
+if dry_run:
+    sys.exit(0)
 d = treq.post(BASE_URL + 'batch/eft/json', headers={'Accept': 'application/json'},
              auth=(USERNAME, PASSWORD), json=inp, params={
              'service_type': 'twoday',
