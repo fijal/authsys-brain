@@ -15,7 +15,7 @@ from twisted.internet.defer import inlineCallbacks
 
 from authsys_common.model import pending_transactions, members, transactions, subscriptions
 from authsys_common.scripts import get_config, get_db_url
-
+from debit_orders import add_two_days, list_pending_transactions, convert_to_charge
 
 if len(sys.argv) not in (1, 3):
     print(__doc__)
@@ -35,26 +35,6 @@ if len(sys.argv) == 1:
     now = datetime.datetime.now()
 else:
     now = datetime.datetime(datetime.datetime.now().year, int(sys.argv[1]), int(sys.argv[2]))
-#twoday = datetime.datetime.now() + datetime.timedelta(days=2)
-twoday = datetime.datetime(2021, 5, 7)
-
-def t(d):
-    return time.mktime(d.timetuple())
-
-lst = [{'pend_id': x, 'member_id': y, 'account_holder_name': a, 'account_number': b, 'branch_code': c, 'price': d}
-       for x, y, a, b, c, d in con.execute(select(
-    [pending_transactions.c.id, members.c.id, members.c.account_holder_name, members.c.account_number, members.c.branch_code,
-    pending_transactions.c.price]).where(
-    and_(and_(pending_transactions.c.timestamp >= t(now.replace(hour=0, minute=0, second=0)),
-         pending_transactions.c.timestamp < t(now.replace(hour=23, minute=0, second=0))),
-         members.c.id == pending_transactions.c.member_id)))]
-
-for i, (_, member_id, _, _, _, _) in enumerate(lst):
-    # sanity check of subscriptions
-    subs = list(con.execute(select([subscriptions.c.id, subscriptions.c.start_timestamp, subscriptions.c.end_timestamp]).where(
-        subscriptions.c.member_id == member_id)))
-    for sub in subs:
-        _, start_timestamp, end_timestamp = sub
 
 @inlineCallbacks
 def f(resp):
@@ -63,12 +43,12 @@ def f(resp):
         print(r)
         reactor.stop()
         return
-    for pend_id, member_id, _, _, _, price in lst:
-        con.execute(pending_transactions.delete().where(pending_transactions.c.id == pend_id))
+    for item in pending_charges:
+        con.execute(pending_transactions.delete().where(pending_transactions.c.id == item['pend_id']))
         con.execute(transactions.insert().values(
             timestamp = int(time.time()),
-            member_id = member_id,
-            price = price,
+            member_id = item['member_id'],
+            price = item['price'],
             type = 'recurring charge',
             description = '',
             outcome = 'submitted'
@@ -82,20 +62,19 @@ def err(*args):
     print(args)
     reactor.stop()
 
-d = []
-for i, (_, _, name, number, branch_code, price) in enumerate(lst):
-    d.append({
-        'account_holder': name,
-        'account_number': number,
-        'branch_code': branch_code,
-        'reference': 'TST%s' % i,
-        'amount_in_cent': str(int(price * 100))
-        })
-
-#form_data = multipart_formdata([[param(u"name", u'file_data'),
-#                body(unicode(s.getvalue()))]])
+twoday = add_two_days(now)
+pending_charges = list_pending_transactions(con)
+inp = convert_to_charge(pending_charges)
+from pprint import pprint
+pprint(pending_charges)
+# sanity check that we don't double charge the same person
+d = {}
+for item in pending_charges:
+    if item['member_id'] in d:
+        epxlode
+    item['member_id'] = None
 d = treq.post(BASE_URL + 'batch/eft/json', headers={'Accept': 'application/json'},
-             auth=(USERNAME, PASSWORD), json=d, params={
+             auth=(USERNAME, PASSWORD), json=inp, params={
              'service_type': 'twoday',
              'action_date': twoday.strftime('%Y-%m-%d'),
              'skip_cdv_check': False,
