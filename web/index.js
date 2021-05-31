@@ -81,7 +81,6 @@ function update_member_list(filter)
             if (phone == null)
                phone = "";
             var text;
-            console.log(res[i]);
             if (res[i].last_daypass_timestamp)
                text = 'cancel day pass';
             else
@@ -514,7 +513,6 @@ function show_form(no)
 
 function filter_members_if_enter(event)
 {
-   console.log(event);
    if (event.keyCode == 13)
       return filter_members();
    return false;
