@@ -1,7 +1,7 @@
 """ Adjust the existing subscriptions to cover debit order charges. Argument is the month for which we need to populate the fields
 Usage:
 
-adjust-subscriptions year month
+adjust-subscriptions year month [--run]
 """
 
 import sys, time
@@ -14,9 +14,15 @@ from authsys_common.scripts import get_config, get_db_url
 from authsys_common.queries import day_start_end, add_month
 from debit_orders import _tstamp
 
-if len(sys.argv) != 3:
+if len(sys.argv) not in (3, 4):
     print(__doc__)
     sys.exit(1)
+dry_run = True
+if len(sys.argv) == 4:
+    if sys.argv[3] != '--run':
+        print(__doc__)
+        sys.exit(1)
+    dry_run = False
 
 year = int(sys.argv[1])
 month = int(sys.argv[2])
@@ -52,23 +58,25 @@ for member_id, name, sub_type, charge_day in list(con.execute(select([members.c.
     end_timestamp = _tstamp(add_month(action_date).replace(day=1, hour=23, second=0, minute=0) )
     print("Adding subscription from %s to %s for %s" % (datetime.fromtimestamp(start_timestamp),
         datetime.fromtimestamp(end_timestamp), name))
-    con.execute(subscriptions.insert().values({
-        'member_id': member_id,
-        'type': sub_type,
-        'start_timestamp': start_timestamp,
-        'end_timestamp': end_timestamp,
-        'renewal_id': 0
-        }))
+    if not dry_run:
+        con.execute(subscriptions.insert().values({
+            'member_id': member_id,
+            'type': sub_type,
+            'start_timestamp': start_timestamp,
+            'end_timestamp': end_timestamp,
+            'renewal_id': 0
+            }))
     price = conf.get('price', sub_type)
     charge_day = action_date.replace(day=charge_day, hour=1, minute=0, second=0)
     #if charge_day.date() == action_date.date():
     #    continue
     print("Adding charge of %s for %s on %s" % (price, name, charge_day))
-    con.execute(pending_transactions.insert().values({
-        'member_id': member_id,
-        'timestamp': _tstamp(charge_day),
-        'creation_timestamp': int(time.time()),
-        'price': price,
-        'type': sub_type,
-        'description': 'monthly charge',
-        }))
+    if not dry_run:
+        con.execute(pending_transactions.insert().values({
+            'member_id': member_id,
+            'timestamp': _tstamp(charge_day),
+            'creation_timestamp': int(time.time()),
+            'price': price,
+            'type': sub_type,
+            'description': 'monthly charge',
+            }))
