@@ -739,7 +739,8 @@ function print_mandate_really()
 {
    var charge_day = $(".radio-right-margin:checked").val();
    window.open('/signup/mandate?member_id=' + global_status.member_id + '&price=' +
-       global_status.prices[global_status.current_member_data.subscription_type] + "&charge_day=" + charge_day);
+       global_status.prices[global_status.current_member_data.subscription_type] + "&charge_day=" + charge_day + 
+       "&gym_id=" + global_status.gym_id);
 }
 
 function update_pricing_for_debit_order()
