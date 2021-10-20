@@ -1,5 +1,6 @@
 
-import main, base64, py, os, time, json, traceback
+import main, base64, py, os, time, json, traceback, calendar
+from datetime import datetime
 from authsys_common.scripts import get_db_url, get_config
 from authsys_common.model import members, daily_passes
 from authsys_common.mandate import create_mandate
@@ -324,8 +325,12 @@ class SignupManager(APIResource):
         name, address, branch_code, account_no, phone = list(main.con.execute(select([members.c.account_holder_name,
             members.c.address, members.c.branch_code, members.c.account_number, members.c.phone]).where(
             members.c.id == member_id)))[0]
+        now = datetime.now()
+        days_in_month = calendar.monthrange(now.year, now.month)[1]
+        price_per_day = price / days_in_month
+        first_charge = price_per_day * (days_in_month - now.day)
         main.con.execute(members.update().values(debit_order_charge_day=charge_day,
-            debit_order_gym_id=gym_id).where(members.c.id == member_id))
+            debit_order_gym_id=gym_id, debit_order_first_charge=first_charge).where(members.c.id == member_id))
         bank = branch_code_lookup[int(branch_code)]
         if branch_code == "198765" or branch_code == "720026":
             if account_no[0] == "1":

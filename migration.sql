@@ -31,16 +31,18 @@
 #    FOREIGN KEY(member_id) REFERENCES members (id)
 #);
 
-alter table members add debit_order_charge_day integer;
+#alter table members add debit_order_charge_day integer;
 
-CREATE TABLE pending_transactions (
-    id INTEGER NOT NULL, 
-    member_id INTEGER, 
-    timestamp INTEGER, 
-    creation_timestamp INTEGER, 
-    price INTEGER, 
-    type VARCHAR, 
-    description VARCHAR, 
-    PRIMARY KEY (id), 
-    FOREIGN KEY(member_id) REFERENCES members (id)
-);
+#CREATE TABLE pending_transactions (
+#    id INTEGER NOT NULL, 
+#    member_id INTEGER, 
+#    timestamp INTEGER, 
+#    creation_timestamp INTEGER, 
+#    price INTEGER, 
+#    type VARCHAR, 
+#    description VARCHAR, 
+#    PRIMARY KEY (id), 
+#    FOREIGN KEY(member_id) REFERENCES members (id)
+#);
+
+alter table members add debit_order_first_charge integer;
