@@ -751,7 +751,7 @@ function update_pricing_for_debit_order()
    var day = (new Date()).getDate();
    var now = new Date();
    var price = global_status.prices[global_status.current_member_data.subscription_type] * 1.0;
-   var price_per_day = price / days_in_current_month;
+   var price_per_day = parseInt(price / days_in_current_month, 10);
    var charge_date = new Date(now.getFullYear(), now.getMonth(), charge_day);
    var first_charge;
    if (charge_day <= day + 5) {
