@@ -54,6 +54,7 @@ def list_pending_transactions(con, now=None):
     if now is None:
         now = datetime.now()
     charge_day = add_two_days(now)
+    XXX # write down check that people who are no longer with 'recurring' don't get charged
     return [{'pend_id': x, 'member_id': y, 'account_holder_name': a, 'account_number': b, 'branch_code': c, 'price': d,
              'charge_day': e, 'timestamp': datetime.fromtimestamp(f)}
        for x, y, a, b, c, d, e, f in con.execute(select(
