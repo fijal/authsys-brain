@@ -40,6 +40,14 @@ if len(sys.argv) == 1:
 else:
     now = datetime.datetime(datetime.datetime.now().year, int(sys.argv[1]), int(sys.argv[2]))
 
+def list_extra_transactions(run):
+    for p_id, memb_id, name in con.execute(select([pending_transactions.c.id, pending_transactions.c.member_id,
+        members.c.name]).where(
+        and_(pending_transactions.c.member_id == members.c.id, members.c.member_type != 'recurring'))):
+        print("Pending transaction:", p_id, name)
+        if run:
+            con.execute(pending_transactions.delete().where(id == p_id))
+
 @inlineCallbacks
 def f(resp):
     r = yield resp.json()
@@ -58,7 +66,7 @@ def f(resp):
             outcome = 'submitted'
             ))
 
-    # update the subscription validity
+    list_extra_transactions(True)
     print(r)
     reactor.stop()
 
@@ -78,6 +86,7 @@ for item in pending_charges:
         epxlode
     item['member_id'] = None
 if dry_run:
+    list_extra_transactions(False)
     sys.exit(0)
 d = treq.post(BASE_URL + 'batch/eft/json', headers={'Accept': 'application/json'},
              auth=(USERNAME, PASSWORD), json=inp, params={
