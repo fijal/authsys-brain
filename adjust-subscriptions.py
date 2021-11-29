@@ -47,7 +47,7 @@ for member_id, name, sub_type, charge_day in list(con.execute(select([members.c.
         and_(subscriptions.c.member_id == member_id,
              and_(subscriptions.c.end_timestamp < day_end + 59*60,
                   subscriptions.c.end_timestamp >= day_start)))))
-    assert len(subs) == 1, (subs, name)
+    assert len(subs) == 1, (subs, name, member_id)
     extra_subs = list(con.execute(select([subscriptions.c.end_timestamp]).where(
         and_(subscriptions.c.end_timestamp > day_end + 59*60, subscriptions.c.member_id == member_id))))
     if len(extra_subs) > 0:

@@ -54,14 +54,13 @@ def list_pending_transactions(con, now=None):
     if now is None:
         now = datetime.now()
     charge_day = add_two_days(now)
-    XXX # write down check that people who are no longer with 'recurring' don't get charged
     return [{'pend_id': x, 'member_id': y, 'account_holder_name': a, 'account_number': b, 'branch_code': c, 'price': d,
              'charge_day': e, 'timestamp': datetime.fromtimestamp(f)}
-       for x, y, a, b, c, d, e, f in con.execute(select(
+       for x, y, a, b, c, d, e, f, _ in con.execute(select(
         [pending_transactions.c.id, members.c.id, members.c.account_holder_name, members.c.account_number, members.c.branch_code,
-        pending_transactions.c.price, members.c.debit_order_charge_day, pending_transactions.c.timestamp]).where(
-        and_(pending_transactions.c.timestamp <= _tstamp(charge_day),
-             members.c.id == pending_transactions.c.member_id)))]
+        pending_transactions.c.price, members.c.debit_order_charge_day, pending_transactions.c.timestamp, members.c.member_type]).where(
+        and_(and_(pending_transactions.c.timestamp <= _tstamp(charge_day),
+             members.c.id == pending_transactions.c.member_id), members.c.member_type == 'recurring')))]
 
 def convert_to_charge(pending):
     r = []

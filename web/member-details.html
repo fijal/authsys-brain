@@ -282,7 +282,7 @@
     <div class="container">
       <div class="row">
         <div class="col-12">
-          <button disabled data-toggle="modal" data-target="#cancel-membership-modal" type="button" class="btn btn-info">Cancel membership</button>
+          <button data-toggle="modal" data-target="#cancel-membership-modal" type="button" class="btn btn-info">Cancel membership</button>
           {% if pause_starts == null %}
           <button disabled onclick="pause_membership({{ member_id }})" type="button" class="btn btn-info">Pause membership - disabled, contact Maciek</button>
           {% else %}
